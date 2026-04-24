@@ -6,6 +6,7 @@ import { useProject } from '../../context/ProjectContext';
 import type { INodeData } from '../../context/ProjectContext';
 import PlotCardNode from './PlotCardNode';
 import PlotNodeModal from './PlotNodeModal';
+import ShortcutsModal from '../ui/ShortcutsModal';
 
 const nodeTypes = {
   plot_card: PlotCardNode,
@@ -15,6 +16,7 @@ const CanvasAreaInner: React.FC = () => {
   const { project, updateNodes, updateEdges } = useProject();
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [isModalOpen, setModalOpen] = useState(false);
+  const [isShortcutsOpen, setShortcutsOpen] = useState(false);
   const { screenToFlowPosition } = useReactFlow();
   
   // Transform our INode to React Flow's expected Node format.
@@ -217,6 +219,13 @@ const CanvasAreaInner: React.FC = () => {
           </span>
         )}
         <button 
+          onClick={() => setShortcutsOpen(true)}
+          className="w-9 h-9 flex items-center justify-center bg-slate-800/80 hover:bg-slate-700 text-blue-400 font-bold rounded-lg border border-slate-700/50 shadow-lg backdrop-blur-sm transition-all hover:scale-105"
+          title="Ver Atajos de Teclado"
+        >
+          ?
+        </button>
+        <button 
           onClick={handleAddNode}
           className="px-4 py-2 bg-emerald-600/90 hover:bg-emerald-500 text-white text-sm font-semibold rounded-lg shadow-[0_0_15px_rgba(16,185,129,0.3)] backdrop-blur-sm transition-all hover:scale-105"
         >
@@ -259,6 +268,11 @@ const CanvasAreaInner: React.FC = () => {
           onSave={handleSaveNode}
         />
       )}
+
+      <ShortcutsModal 
+        isOpen={isShortcutsOpen} 
+        onClose={() => setShortcutsOpen(false)} 
+      />
     </div>
   );
 };
