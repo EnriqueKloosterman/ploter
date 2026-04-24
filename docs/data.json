@@ -1,0 +1,71 @@
+{
+  "author": {
+    "id": "auth_9921",
+    "name": "Enrique",
+    "globalSettings": { "theme": "dark", "canvasGrid": true },
+    "authorLibrary": {
+      "globalTags": [
+        { "tagId": "gt_1", "label": "Giro", "color": "#800080" }
+      ],
+      "globalCharacters": []
+    }
+  },
+  "project": {
+    "metadata": {
+      "projectId": "proj_001",
+      "title": "Crónicas del Vacío",
+      "createdAt": "2026-04-10T10:00:00Z", 
+      "lastModified": "2026-04-10T18:30:00Z" 
+    },
+    "characters": [
+      {
+        "id": "char_001",
+        "name": "Kaelen",
+        "image": {
+          "url": "https://...",
+          "width": 800, 
+          "height": 600
+        }
+      }
+    ],
+    "canvas": {
+      "viewport": { "x": 120.5, "y": -45.0, "zoom": 0.75 },
+      "nodes": [
+        {
+          "id": "node_1",
+          "type": "plot_card",
+          "position": { "x": 250, "y": 100 },
+          "data": {
+            "title": "La Decisión",
+            "content": "...",
+            "color": "orange",
+            "characterTags": ["char_001"],
+            "categoryTags": ["gt_1"]
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "edge_1-2",
+          "source": "node_1",
+          "target": "node_2",
+          "sourceHandle": "output_right_1", 
+          "targetHandle": "input_left",     
+          "label": "Decide entregar"
+        }
+      ]
+    },
+    "chapterManager": {
+      "chapters": [
+        {
+          "chapterId": "chap_1",
+          "beats": [ { "id": "b1", "description": "...", "linkedNodes": ["n1"] } ]
+        }
+      ]
+    },
+    "trashBin": { 
+      "nodes": [],
+      "edges": []
+    }
+  }
+}
