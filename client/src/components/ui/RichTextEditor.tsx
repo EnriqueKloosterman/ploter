@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -24,6 +24,15 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChange, plac
       onChange(editor.getHTML());
     },
   });
+
+  useEffect(() => {
+    if (!editor) return;
+
+    const currentContent = editor.getHTML();
+    if (currentContent !== content) {
+      editor.commands.setContent(content || '', false);
+    }
+  }, [content, editor]);
 
   if (!editor) {
     return null;

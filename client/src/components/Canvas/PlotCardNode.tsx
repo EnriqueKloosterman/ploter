@@ -1,10 +1,10 @@
 import React, { memo } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import type { NodeProps } from '@xyflow/react';
-import type { INodeData } from '../../context/ProjectContext';
-import { useProject } from '../../context/ProjectContext';
+import type { INodeData } from '../../context/projectTypes';
+import { useProject } from '../../context/useProject';
+import { sanitizeRichTextHtml } from '../../lib/sanitizeHtml';
 
-// Helper to map color strings to Tailwind classes safely
 const getColorAccent = (colorName?: string) => {
   switch (colorName?.toLowerCase()) {
     case 'red': return 'bg-red-500 shadow-red-500/20';
@@ -19,8 +19,10 @@ const getColorAccent = (colorName?: string) => {
 
 const PlotCardNode: React.FC<NodeProps> = ({ data, selected }) => {
   const { project, activeFocusChapterId, activeFilterCharId } = useProject();
-  const nodeData = data as unknown as INodeData;
+  const nodeData = data as INodeData;
   const accentClass = getColorAccent(nodeData.color);
+  const safeTitleHtml = sanitizeRichTextHtml(nodeData.title, 'Untitled Node');
+  const safeContentHtml = sanitizeRichTextHtml(nodeData.content, 'Sin descripcion pautada aun para esta trama.');
 
   const isFocused = activeFocusChapterId === null || activeFocusChapterId === nodeData.chapterId;
   const isFiltered = activeFilterCharId !== null && !(nodeData.characterTags || []).includes(activeFilterCharId);
@@ -33,11 +35,10 @@ const PlotCardNode: React.FC<NodeProps> = ({ data, selected }) => {
         bg-slate-900/80 backdrop-blur-md overflow-hidden
         transition-all duration-500 ease-in-out cursor-pointer
         ${selected ? 'ring-2 ring-blue-500 scale-105 shadow-2xl' : 'hover:scale-[1.02] hover:border-white/20 shadow-xl'}
-        ${selected ? `shadow-[0_0_20px_rgba(59,130,246,0.3)]` : ''}
+        ${selected ? 'shadow-[0_0_20px_rgba(59,130,246,0.3)]' : ''}
         ${isDimmed ? 'opacity-20 grayscale pointer-events-none saturate-0' : 'opacity-100'}
       `}
     >
-      {/* Top Input Handle */}
       <Handle
         type="target"
         position={Position.Top}
@@ -51,18 +52,15 @@ const PlotCardNode: React.FC<NodeProps> = ({ data, selected }) => {
         id="input_left"
       />
 
-      {/* Decorative Accent Ribbon Top */}
       <div className={`h-1.5 w-full ${accentClass}`}></div>
 
       <div className="p-4 flex flex-col gap-3">
-        {/* Header: Title and Category Tags */}
         <div className="flex justify-between items-start gap-2">
-          <h3 
+          <h3
             className="text-slate-100 font-bold text-sm tracking-wide leading-tight line-clamp-2"
-            dangerouslySetInnerHTML={{ __html: (nodeData.title && nodeData.title !== '<p></p>') ? nodeData.title : 'Untitled Node' }}
+            dangerouslySetInnerHTML={{ __html: safeTitleHtml }}
           />
-          
-          {/* Category Tag pill mock */}
+
           {nodeData.categoryTags && nodeData.categoryTags.length > 0 && (
             <div className="shrink-0 flex items-center">
               <span className="px-2 py-0.5 mt-0.5 rounded-full bg-purple-500/20 text-purple-300 text-[10px] font-semibold uppercase tracking-wider border border-purple-500/30">
@@ -72,21 +70,19 @@ const PlotCardNode: React.FC<NodeProps> = ({ data, selected }) => {
           )}
         </div>
 
-        {/* Body Content */}
-        <div 
+        <div
           className="text-slate-400 text-xs leading-relaxed line-clamp-3 font-medium"
-          dangerouslySetInnerHTML={{ __html: (nodeData.content && nodeData.content !== '<p></p>') ? nodeData.content : 'Sin descripción pautada aún para esta trama.' }}
+          dangerouslySetInnerHTML={{ __html: safeContentHtml }}
         />
 
-        {/* Footer: Characters associated */}
         {nodeData.characterTags && nodeData.characterTags.length > 0 && (
           <div className="pt-2 mt-1 border-t border-slate-700/50 flex flex-wrap gap-1">
             <span className="text-[9px] text-slate-500 font-medium mr-1 uppercase self-center tracking-wider">Roles:</span>
             {nodeData.characterTags.map((charId, idx) => {
-              const globalChar = project.characters.find(c => c.id === charId);
+              const globalChar = project.characters.find((char) => char.id === charId);
               return (
-                <span 
-                  key={`${charId}-${idx}`} 
+                <span
+                  key={`${charId}-${idx}`}
                   className="px-1.5 py-0.5 rounded bg-blue-900/40 border border-blue-500/30 text-[9px] font-semibold text-blue-200"
                 >
                   {globalChar?.name || 'Desconocido'}
@@ -97,7 +93,6 @@ const PlotCardNode: React.FC<NodeProps> = ({ data, selected }) => {
         )}
       </div>
 
-      {/* Output Handles */}
       <Handle
         type="source"
         position={Position.Bottom}

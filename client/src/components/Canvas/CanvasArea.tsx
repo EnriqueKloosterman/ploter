@@ -1,69 +1,85 @@
-import React, { useCallback, useState, useEffect, useRef } from 'react';
-import { ReactFlow, MiniMap, Controls, Background, useNodesState, useEdgesState, BackgroundVariant, addEdge, useReactFlow, reconnectEdge } from '@xyflow/react';
-import type { Connection, Node, Edge } from '@xyflow/react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  ReactFlow,
+  MiniMap,
+  Controls,
+  Background,
+  useNodesState,
+  useEdgesState,
+  BackgroundVariant,
+  addEdge,
+  useReactFlow,
+  reconnectEdge
+} from '@xyflow/react';
+import type { Connection, Edge, Node } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { useProject } from '../../context/ProjectContext';
-import type { INodeData } from '../../context/ProjectContext';
+import { toPng } from 'html-to-image';
+import { useProject } from '../../context/useProject';
+import type { IEdge, INode, INodeData } from '../../context/projectTypes';
 import PlotCardNode from './PlotCardNode';
 import PlotNodeModal from './PlotNodeModal';
 import ShortcutsModal from '../ui/ShortcutsModal';
 import EdgeModal from './EdgeModal';
-import { toPng } from 'html-to-image';
 
 const nodeTypes = {
-  plot_card: PlotCardNode,
+  plot_card: PlotCardNode
 };
 
+type PlotFlowNode = Node<INodeData>;
+type ConnectionState = {
+  isValid: boolean;
+  fromNode?: PlotFlowNode;
+  fromHandle?: { id?: string | null } | null;
+};
+
+const toProjectNodes = (flowNodes: PlotFlowNode[]): INode[] => flowNodes as unknown as INode[];
+const toProjectEdges = (flowEdges: Edge[]): IEdge[] => flowEdges as unknown as IEdge[];
+
 const CanvasAreaInner: React.FC = () => {
-  const { project, updateNodes, updateEdges } = useProject();
-  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const { project, updateNodes, updateEdges, isSaving, hasUnsavedChanges } = useProject();
+  const [selectedNode, setSelectedNode] = useState<PlotFlowNode | null>(null);
   const [isModalOpen, setModalOpen] = useState(false);
   const [isShortcutsOpen, setShortcutsOpen] = useState(false);
   const [editingEdge, setEditingEdge] = useState<Edge | null>(null);
   const { screenToFlowPosition, setCenter } = useReactFlow();
-  
+
   const flowContainerRef = useRef<HTMLDivElement>(null);
-  
-  // Transform our INode to React Flow's expected Node format.
-  const [nodes, setNodes, onNodesChange] = useNodesState(project.canvas.nodes as unknown as Node[]);
+  const [nodes, setNodes, onNodesChange] = useNodesState(project.canvas.nodes as unknown as PlotFlowNode[]);
   const [edges, setEdges, onEdgesChange] = useEdgesState(project.canvas.edges as unknown as Edge[]);
+  const nodesRef = useRef(nodes);
+
+  useEffect(() => {
+    nodesRef.current = nodes;
+  }, [nodes]);
 
   const onConnect = useCallback((connection: Connection) => {
-    setEdges((eds) => {
-      const newEdges = addEdge(connection, eds);
-      // Actualiza Context para Guardado DB
-      updateEdges(newEdges as unknown as typeof project.canvas.edges);
+    setEdges((currentEdges) => {
+      const newEdges = addEdge(connection, currentEdges);
+      updateEdges(toProjectEdges(newEdges));
       return newEdges;
     });
   }, [setEdges, updateEdges]);
 
   const onReconnect = useCallback((oldEdge: Edge, newConnection: Connection) => {
-    setEdges((eds) => {
-      const reconnectedEds = reconnectEdge(oldEdge, newConnection, eds);
-      updateEdges(reconnectedEds as unknown as typeof project.canvas.edges);
-      return reconnectedEds;
+    setEdges((currentEdges) => {
+      const reconnectedEdges = reconnectEdge(oldEdge, newConnection, currentEdges);
+      updateEdges(toProjectEdges(reconnectedEdges));
+      return reconnectedEdges;
     });
   }, [setEdges, updateEdges]);
 
-  // Click handler para abrir modal
   const handleNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
-    setSelectedNode(node);
+    setSelectedNode(node as PlotFlowNode);
     setModalOpen(true);
   }, []);
 
-  // Update real desde el Modal
   const handleSaveNode = useCallback((nodeId: string, newData: INodeData) => {
-    const freshNodes = nodes.map((n) => {
-      if (n.id === nodeId) {
-        return { ...n, data: newData as any };
-      }
-      return n;
-    });
-    
-    // Actualiza React Flow Inmediatamente (Visual)
+    const freshNodes = nodes.map((node) => (
+      node.id === nodeId ? { ...node, data: newData } : node
+    ));
+
     setNodes(freshNodes);
-    // Actualiza Context para Guardado DB
-    updateNodes(freshNodes as unknown as typeof project.canvas.nodes);
+    updateNodes(toProjectNodes(freshNodes));
   }, [nodes, setNodes, updateNodes]);
 
   const handleEdgeClick = useCallback((_: React.MouseEvent, edge: Edge) => {
@@ -71,178 +87,134 @@ const CanvasAreaInner: React.FC = () => {
   }, []);
 
   const handleSaveEdge = useCallback((updatedEdge: Edge) => {
-    setEdges((eds) => {
-      const newEds = eds.map((e) => e.id === updatedEdge.id ? updatedEdge : e);
-      updateEdges(newEds as unknown as typeof project.canvas.edges);
-      return newEds;
+    setEdges((currentEdges) => {
+      const newEdges = currentEdges.map((edge) => edge.id === updatedEdge.id ? updatedEdge : edge);
+      updateEdges(toProjectEdges(newEdges));
+      return newEdges;
     });
     setEditingEdge(null);
   }, [setEdges, updateEdges]);
 
   const handleDeleteEdge = useCallback((edgeId: string) => {
-    setEdges((eds) => {
-      const newEds = eds.filter((e) => e.id !== edgeId);
-      updateEdges(newEds as unknown as typeof project.canvas.edges);
-      return newEds;
+    setEdges((currentEdges) => {
+      const newEdges = currentEdges.filter((edge) => edge.id !== edgeId);
+      updateEdges(toProjectEdges(newEdges));
+      return newEdges;
     });
     setEditingEdge(null);
   }, [setEdges, updateEdges]);
 
   const handleExport = useCallback(() => {
-    if (flowContainerRef.current === null) return;
-    
-    const controls = flowContainerRef.current.querySelector('.react-flow__panel') as HTMLElement;
+    if (!flowContainerRef.current) return;
+
+    const controls = flowContainerRef.current.querySelector('.react-flow__panel') as HTMLElement | null;
     if (controls) controls.style.display = 'none';
 
     toPng(flowContainerRef.current, {
       backgroundColor: '#0f172a',
-      pixelRatio: 2,
+      pixelRatio: 2
     }).then((dataUrl) => {
       const link = document.createElement('a');
-      link.download = `PlotWeaver_Export_${Date.now()}.png`;
+      link.download = `PlotWeaver_export_${Date.now()}.png`;
       link.href = dataUrl;
       link.click();
       if (controls) controls.style.display = 'block';
-    }).catch(err => {
-      console.error('Error exporting image:', err);
+    }).catch((error) => {
+      console.error('Error exporting image:', error);
       if (controls) controls.style.display = 'block';
     });
   }, []);
 
-  // Referencia mutable para el autosave sin regenerar el ciclo
-  const projectRef = React.useRef(project);
-  useEffect(() => {
-    projectRef.current = project;
-  }, [project]);
-
-  const [isAutoSaving, setIsAutoSaving] = useState(false);
-
-  // Ref para capturar el estado visual actual y mandarlo a Context al parar de arrastrar
-  const nodesRef = React.useRef(nodes);
-  useEffect(() => { nodesRef.current = nodes; }, [nodes]);
-
   const onNodeDragStop = useCallback(() => {
-    // Cuando el usuario suelta la tarjeta, registramos su posición final en el context global
-    updateNodes(nodesRef.current as unknown as typeof project.canvas.nodes);
+    updateNodes(toProjectNodes(nodesRef.current));
   }, [updateNodes]);
 
-  // Autosave Silencioso cada 60s fijos
-  useEffect(() => {
-    const saveInterval = setInterval(async () => {
-      try {
-        const currentProject = projectRef.current;
-        if (!currentProject.metadata?.projectId) return;
-
-        setIsAutoSaving(true);
-        await fetch(`http://localhost:5000/api/projects/${currentProject.metadata.projectId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(currentProject)
-        });
-        
-        // Quitar la nota de 'Guardando...' visual luego de 2s
-        setTimeout(() => setIsAutoSaving(false), 2000);
-      } catch (e) {
-        console.error('Autosave falló en la red:', e);
-      }
-    }, 60000); // 60,000ms = 1 min
-
-    return () => clearInterval(saveInterval);
-  }, []);
-
-  const handleAddNode = () => {
+  const handleAddNode = useCallback(() => {
     const newNodeId = `node_${Date.now()}`;
     const newNodeData: INodeData = {
       title: 'Nueva Escena',
-      content: 'Escribe los eventos aquí...',
+      content: 'Escribe los eventos aqui...',
       color: 'slate',
       characterTags: [],
-      chapterId: '' // Base vacía para capítulos
+      chapterId: ''
     };
-    
-    // Calcula la posición mapeando el centro geométrico de la pantalla actual al Canvas interior
+
     const centerPos = screenToFlowPosition({
       x: window.innerWidth / 2,
       y: window.innerHeight / 2
     });
 
-    const newNode: Node = {
+    const newNode: PlotFlowNode = {
       id: newNodeId,
       type: 'plot_card',
-      position: { x: centerPos.x - 120, y: centerPos.y - 120 }, // Offsets for card width centering
-      data: newNodeData as any
+      position: { x: centerPos.x - 120, y: centerPos.y - 120 },
+      data: newNodeData
     };
 
     const newNodesList = [...nodes, newNode];
     setNodes(newNodesList);
-    updateNodes(newNodesList as unknown as typeof project.canvas.nodes);
-
-    // Abrir el modal automáticamente con la nueva tarjeta recién creada
+    updateNodes(toProjectNodes(newNodesList));
     setSelectedNode(newNode);
     setModalOpen(true);
-  };
+  }, [nodes, screenToFlowPosition, setNodes, updateNodes]);
 
   const onNodesDelete = useCallback((deleted: Node[]) => {
-    const deletedIds = deleted.map(d => d.id);
-    const remaining = nodes.filter(n => !deletedIds.includes(n.id));
-    updateNodes(remaining as unknown as typeof project.canvas.nodes);
+    const deletedIds = deleted.map((node) => node.id);
+    const remaining = nodes.filter((node) => !deletedIds.includes(node.id));
+    updateNodes(toProjectNodes(remaining));
   }, [nodes, updateNodes]);
 
   const onEdgesDelete = useCallback((deleted: Edge[]) => {
-    const deletedIds = deleted.map(d => d.id);
-    const remaining = edges.filter(e => !deletedIds.includes(e.id));
-    updateEdges(remaining as unknown as typeof project.canvas.edges);
+    const deletedIds = deleted.map((edge) => edge.id);
+    const remaining = edges.filter((edge) => !deletedIds.includes(edge.id));
+    updateEdges(toProjectEdges(remaining));
   }, [edges, updateEdges]);
 
-  const onConnectEnd = useCallback((event: MouseEvent | TouchEvent, connectionState: any) => {
-    // Si la conexión no se ancló a un target válido, fue soltada en el aire.
-    if (!connectionState.isValid && connectionState.fromNode) {
-      // Validamos visualmente que soltó sobre el pane general (el canvas vacío)
-      const targetIsPane = (event.target as Element).classList.contains('react-flow__pane');
+  const onConnectEnd = useCallback((event: MouseEvent | TouchEvent, connectionState: ConnectionState) => {
+    if (!connectionState.isValid || !connectionState.fromNode) return;
 
-      if (targetIsPane) {
-        const { clientX, clientY } = 'clientX' in event ? event : event.touches[0];
-        const rawPosition = screenToFlowPosition({ x: clientX, y: clientY });
-        
-        // Compensamos el centrado de la tarjeta (ancho aprox 250, alto 120)
-        const position = { x: rawPosition.x - 125, y: rawPosition.y - 60 };
+    const targetIsPane = (event.target as Element).classList.contains('react-flow__pane');
+    if (!targetIsPane) return;
 
-        const newNodeId = `node_${Date.now()}`;
-        const newNodeData: INodeData = {
-          title: 'Continuación',
-          content: 'Detalla cómo sigue la historia aquí...',
-          color: 'slate',
-          characterTags: [],
-          chapterId: '' // Base vacía para capítulos
-        };
-        const newNode: Node = {
-          id: newNodeId,
-          type: 'plot_card',
-          position,
-          data: newNodeData as any
-        };
+    const { clientX, clientY } = 'clientX' in event ? event : event.touches[0];
+    const rawPosition = screenToFlowPosition({ x: clientX, y: clientY });
+    const position = { x: rawPosition.x - 125, y: rawPosition.y - 60 };
 
-        const newEdge: Edge = {
-          id: `edge_${connectionState.fromNode.id}-${newNodeId}`,
-          source: connectionState.fromNode.id,
-          target: newNodeId,
-          sourceHandle: connectionState.fromHandle?.id || null,
-        };
+    const newNodeId = `node_${Date.now()}`;
+    const newNodeData: INodeData = {
+      title: 'Continuacion',
+      content: 'Detalla como sigue la historia aqui...',
+      color: 'slate',
+      characterTags: [],
+      chapterId: ''
+    };
 
-        // Inject new node and edge simultaneously
-        setNodes((nds) => {
-          const freshNodes = [...nds, newNode];
-          updateNodes(freshNodes as unknown as typeof project.canvas.nodes);
-          return freshNodes;
-        });
-        setEdges((eds) => {
-          const freshEdges = [...eds, newEdge];
-          updateEdges(freshEdges as unknown as typeof project.canvas.edges);
-          return freshEdges;
-        });
-      }
-    }
-  }, [screenToFlowPosition, updateNodes, updateEdges, setNodes, setEdges]);
+    const newNode: PlotFlowNode = {
+      id: newNodeId,
+      type: 'plot_card',
+      position,
+      data: newNodeData
+    };
+
+    const newEdge: Edge = {
+      id: `edge_${connectionState.fromNode.id}-${newNodeId}`,
+      source: connectionState.fromNode.id,
+      target: newNodeId,
+      sourceHandle: connectionState.fromHandle?.id || null
+    };
+
+    setNodes((currentNodes) => {
+      const freshNodes = [...currentNodes, newNode];
+      updateNodes(toProjectNodes(freshNodes));
+      return freshNodes;
+    });
+
+    setEdges((currentEdges) => {
+      const freshEdges = [...currentEdges, newEdge];
+      updateEdges(toProjectEdges(freshEdges));
+      return freshEdges;
+    });
+  }, [screenToFlowPosition, setEdges, setNodes, updateEdges, updateNodes]);
 
   const getMiniMapColor = (node: Node) => {
     switch ((node.data?.color as string)?.toLowerCase()) {
@@ -252,39 +224,42 @@ const CanvasAreaInner: React.FC = () => {
       case 'green': return '#10b981';
       case 'blue': return '#3b82f6';
       case 'purple': return '#a855f7';
-      default: return '#64748b'; // slate-500
+      default: return '#64748b';
     }
   };
 
   return (
     <div className="flex-1 relative bg-slate-900 border-l border-white/5 h-full w-full min-h-screen" ref={flowContainerRef}>
-      
-      {/* Top Bar Floating Commands */}
       <div className="absolute top-4 right-4 z-10 flex gap-3 items-center">
-        {isAutoSaving && (
+        {isSaving && (
           <span className="text-xs font-medium text-emerald-400 bg-slate-800/80 px-3 py-1.5 rounded-full border border-emerald-500/30 animate-pulse backdrop-blur-sm">
-            Guardado ✅
+            Guardando...
           </span>
         )}
-        <button 
+        {!isSaving && hasUnsavedChanges && (
+          <span className="text-xs font-medium text-amber-300 bg-slate-800/80 px-3 py-1.5 rounded-full border border-amber-500/30 backdrop-blur-sm">
+            Cambios pendientes
+          </span>
+        )}
+        <button
           onClick={handleExport}
           className="w-9 h-9 flex items-center justify-center bg-slate-800/80 hover:bg-slate-700 text-pink-400 font-bold rounded-lg border border-slate-700/50 shadow-lg backdrop-blur-sm transition-all hover:scale-105"
-          title="Exportar a Imagen HD"
+          title="Exportar a imagen HD"
         >
-          📷
+          P
         </button>
-        <button 
+        <button
           onClick={() => setShortcutsOpen(true)}
           className="w-9 h-9 flex items-center justify-center bg-slate-800/80 hover:bg-slate-700 text-blue-400 font-bold rounded-lg border border-slate-700/50 shadow-lg backdrop-blur-sm transition-all hover:scale-105"
-          title="Ver Atajos de Teclado"
+          title="Ver atajos de teclado"
         >
           ?
         </button>
-        <button 
+        <button
           onClick={handleAddNode}
           className="px-4 py-2 bg-emerald-600/90 hover:bg-emerald-500 text-white text-sm font-semibold rounded-lg shadow-[0_0_15px_rgba(16,185,129,0.3)] backdrop-blur-sm transition-all hover:scale-105"
         >
-          + Añadir Tarjeta
+          + Anadir tarjeta
         </button>
       </div>
 
@@ -305,11 +280,11 @@ const CanvasAreaInner: React.FC = () => {
         fitView
       >
         <Controls />
-        <MiniMap 
-          nodeColor={getMiniMapColor} 
-          nodeStrokeWidth={3} 
-          zoomable 
-          pannable 
+        <MiniMap
+          nodeColor={getMiniMapColor}
+          nodeStrokeWidth={3}
+          zoomable
+          pannable
           maskColor="rgba(15, 23, 42, 0.7)"
           style={{ backgroundColor: '#1e293b', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}
           onNodeClick={(_, node) => setCenter(node.position.x + 125, node.position.y + 125, { duration: 800, zoom: 1.2 })}
@@ -317,7 +292,8 @@ const CanvasAreaInner: React.FC = () => {
         <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
       </ReactFlow>
 
-      <EdgeModal 
+      <EdgeModal
+        key={editingEdge?.id ?? 'edge-modal'}
         isOpen={editingEdge !== null}
         edge={editingEdge}
         onClose={() => setEditingEdge(null)}
@@ -327,6 +303,7 @@ const CanvasAreaInner: React.FC = () => {
 
       {isModalOpen && selectedNode && (
         <PlotNodeModal
+          key={selectedNode.id}
           node={selectedNode}
           isOpen={isModalOpen}
           onClose={() => setModalOpen(false)}
@@ -334,9 +311,9 @@ const CanvasAreaInner: React.FC = () => {
         />
       )}
 
-      <ShortcutsModal 
-        isOpen={isShortcutsOpen} 
-        onClose={() => setShortcutsOpen(false)} 
+      <ShortcutsModal
+        isOpen={isShortcutsOpen}
+        onClose={() => setShortcutsOpen(false)}
       />
     </div>
   );

@@ -1,128 +1,81 @@
+import type { Request, Response } from 'express';
 import Project from '../models/Project.js';
 import User from '../models/User.js';
 
-// Seed initial mock from SDD if empty
-const createMockProjectIfEmpty = async (projectId: string) => {
-  let project = await Project.findOne({ 'metadata.projectId': projectId });
-  
-  if (!project) {
-    // Check if author exists or create mock author
-    let user = await User.findOne({ authorId: 'auth_9921' });
-    if (!user) {
-      user = await User.create({
-        authorId: 'auth_9921',
-        name: 'Enrique',
-        globalSettings: { theme: 'dark', canvasGrid: true },
-        authorLibrary: {
-          globalTags: [{ tagId: 'gt_1', label: 'Giro', color: '#800080' }],
-          globalCharacters: []
-        }
-      });
-    }
+type ProjectUpdatePayload = Record<string, unknown>;
 
-    // Create the project seeding from the SDD JSON
-    project = await Project.create({
-      authorId: user._id,
-      metadata: {
-        projectId: projectId,
-        title: "Crónicas del Vacío",
-      },
-      characters: [
-        {
-          id: "char_001",
-          name: "Kaelen",
-          image: { url: "https://via.placeholder.com/150", width: 150, height: 150 }
-        }
-      ],
-      canvas: {
-        viewport: { x: 120.5, y: -45.0, zoom: 0.75 },
-        nodes: [
-          {
-            id: "node_1",
-            type: "plot_card",
-            position: { x: 250, y: 100 },
-            data: {
-              title: "La Decisión",
-              content: "Kaelen debe decidir si entregar el artefacto o huir.",
-              color: "orange",
-              characterTags: ["char_001"],
-              categoryTags: ["gt_1"]
-            }
-          },
-          {
-            id: "node_2",
-            type: "plot_card",
-            position: { x: 600, y: 150 },
-            data: {
-              title: "La Huida",
-              content: "Comienza la persecución en el vacío.",
-              color: "red",
-              characterTags: ["char_001"]
-            }
-          }
-        ],
-        edges: [
-          {
-            id: "edge_1-2",
-            source: "node_1",
-            target: "node_2",
-            sourceHandle: "output_right_1",
-            targetHandle: "input_left",
-            label: "Decide huir"
-          }
-        ]
-      },
-      chapterManager: {
-        chapters: [
-          {
-            chapterId: "chap_1",
-            beats: [{ id: "b1", description: "El descubrimiento", linkedNodes: ["node_1"] }]
-          }
-        ]
-      },
-      trashBin: { nodes: [], edges: [] }
-    });
+const pickProjectUpdateFields = (payload: ProjectUpdatePayload) => {
+  const allowedUpdate: ProjectUpdatePayload = {};
+
+  if (typeof payload['metadata.title'] === 'string') {
+    allowedUpdate['metadata.title'] = payload['metadata.title'];
   }
 
-  return project;
+  if (payload.metadata && typeof payload.metadata === 'object' && payload.metadata !== null) {
+    const metadata = payload.metadata as Record<string, unknown>;
+    if (typeof metadata.title === 'string') {
+      allowedUpdate['metadata.title'] = metadata.title;
+    }
+  }
+
+  if (Array.isArray(payload.characters)) {
+    allowedUpdate.characters = payload.characters;
+  }
+
+  if (payload.canvas && typeof payload.canvas === 'object' && payload.canvas !== null) {
+    allowedUpdate.canvas = payload.canvas;
+  }
+
+  if (payload.chapterManager && typeof payload.chapterManager === 'object' && payload.chapterManager !== null) {
+    allowedUpdate.chapterManager = payload.chapterManager;
+  }
+
+  if (payload.trashBin && typeof payload.trashBin === 'object' && payload.trashBin !== null) {
+    allowedUpdate.trashBin = payload.trashBin;
+  }
+
+  return allowedUpdate;
 };
 
 // GET /api/projects/:projectId
-export const getProjectById = async (req: any, res: any) => {
+export const getProjectById = async (req: Request, res: Response) => {
   try {
-    const { projectId } = req.params;
-    
-    // Auto-seed para pruebas tempranas de la app
-    const project = await createMockProjectIfEmpty(projectId);
+    const projectId = String(req.params.projectId);
+    const project = await Project.findOne({ 'metadata.projectId': projectId });
+
+    if (!project) {
+      return res.status(404).json({ status: 'error', message: 'Project no encontrado' });
+    }
 
     res.json({
       status: 'success',
       data: project
     });
-  } catch (error: any) {
-    console.error("Error Fetching Project: ", error);
+  } catch (error) {
+    console.error('Error Fetching Project: ', error);
     res.status(500).json({ status: 'error', message: 'Error retrieving project' });
   }
 };
 
 // PUT /api/projects/:projectId
-export const updateProject = async (req: any, res: any) => {
+export const updateProject = async (req: Request, res: Response) => {
   try {
-    const { projectId } = req.params;
-    const updateData = req.body; 
+    const projectId = String(req.params.projectId);
+    const updateData = pickProjectUpdateFields(req.body as ProjectUpdatePayload);
 
-    // Resolver ConflictingUpdateOperators de MongoDB
-    if (updateData.metadata) {
-      updateData.metadata.lastModified = new Date();
-    } else {
-      updateData['metadata.lastModified'] = new Date();
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'No hay campos permitidos para actualizar'
+      });
     }
 
-    // Find and update project using MongoDB mapping
+    updateData['metadata.lastModified'] = new Date();
+
     const project = await Project.findOneAndUpdate(
       { 'metadata.projectId': projectId },
       { $set: updateData },
-      { new: true } 
+      { new: true, runValidators: true }
     );
 
     if (!project) {
@@ -133,52 +86,55 @@ export const updateProject = async (req: any, res: any) => {
       status: 'success',
       data: project
     });
-  } catch (error: any) {
-    console.error("Error Updating Project: ", error);
+  } catch (error) {
+    console.error('Error Updating Project: ', error);
     res.status(500).json({ status: 'error', message: 'Fallo al actualizar proyecto' });
   }
 };
 
 // DELETE /api/projects/:projectId
-export const deleteProject = async (req: any, res: any) => {
+export const deleteProject = async (req: Request, res: Response) => {
   try {
-    const { projectId } = req.params;
+    const projectId = String(req.params.projectId);
     const project = await Project.findOneAndDelete({ 'metadata.projectId': projectId });
-    
+
     if (!project) {
       return res.status(404).json({ status: 'error', message: 'Project no encontrado' });
     }
 
     res.json({
       status: 'success',
-      message: 'Proyecto eliminado con éxito'
+      message: 'Proyecto eliminado con exito'
     });
-  } catch (error: any) {
-    console.error("Error Deleting Project: ", error);
+  } catch (error) {
+    console.error('Error Deleting Project: ', error);
     res.status(500).json({ status: 'error', message: 'Fallo al eliminar proyecto' });
   }
 };
 
 // GET /api/projects
-export const getAllProjects = async (req: any, res: any) => {
+export const getAllProjects = async (_req: Request, res: Response) => {
   try {
-    // Only return metadata for the dashboard
-    const projects = await Project.find({}, 'metadata.projectId metadata.title metadata.lastModified metadata.createdAt').sort({ 'metadata.lastModified': -1 });
+    const projects = await Project.find(
+      {},
+      'metadata.projectId metadata.title metadata.lastModified metadata.createdAt'
+    ).sort({ 'metadata.lastModified': -1 });
+
     res.json({
       status: 'success',
       data: projects
     });
-  } catch (error: any) {
-    console.error("Error Fetching Projects List: ", error);
+  } catch (error) {
+    console.error('Error Fetching Projects List: ', error);
     res.status(500).json({ status: 'error', message: 'Error retrieving projects' });
   }
 };
 
 // POST /api/projects
-export const createProject = async (req: any, res: any) => {
+export const createProject = async (req: Request, res: Response) => {
   try {
-    const { title } = req.body;
-    
+    const { title } = req.body as { title?: string };
+
     let user = await User.findOne({ authorId: 'auth_9921' });
     if (!user) {
       user = await User.create({
@@ -197,7 +153,7 @@ export const createProject = async (req: any, res: any) => {
       authorId: user._id,
       metadata: {
         projectId: newProjectId,
-        title: title || 'Historia Sin Título',
+        title: title || 'Historia sin titulo'
       },
       characters: [],
       canvas: {
@@ -215,8 +171,8 @@ export const createProject = async (req: any, res: any) => {
       status: 'success',
       data: newProject
     });
-  } catch (error: any) {
-    console.error("Error Creating Project: ", error);
+  } catch (error) {
+    console.error('Error Creating Project: ', error);
     res.status(500).json({ status: 'error', message: 'Fallo al crear el proyecto' });
   }
 };

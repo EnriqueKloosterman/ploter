@@ -1,115 +1,145 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import { apiFetch } from '../lib/api';
+import { ProjectContext } from './useProject';
+import type { ICharacter, IChapter, IEdge, INode, IProject } from './projectTypes';
 
-// === TypeScript Interfaces reflecting data.json ===
-export interface ICharacter {
-  id: string;
-  name: string;
-  image?: { url: string; width: number; height: number };
-}
+const AUTOSAVE_DELAY_MS = 5000;
 
-export interface INodeData {
-  title?: string;
-  content?: string;
-  color?: string;
-  categoryTags?: string[];
-  characterTags?: string[];
-  chapterId?: string; // Vinculo hacia el Acto/Capitulo
-}
+const snapshotProject = (project: IProject | null) => (
+  project ? JSON.stringify(project) : null
+);
 
-export interface INode {
-  id: string;
-  type: string;
-  position: { x: number; y: number };
-  data: INodeData;
-}
-
-export interface IEdge {
-  id: string;
-  source: string;
-  target: string;
-  sourceHandle?: string;
-  targetHandle?: string;
-  label?: string;
-}
-
-export interface IBeat {
-  id: string;
-  description: string;
-  linkedNodes: string[];
-}
-
-export interface IChapter {
-  chapterId: string;
-  beats: IBeat[];
-}
-
-export interface IProject {
-  metadata: {
-    projectId: string;
-    title: string;
-    createdAt: string;
-    lastModified: string;
-  };
-  characters: ICharacter[];
-  canvas: {
-    viewport: { x: number; y: number; zoom: number };
-    nodes: INode[];
-    edges: IEdge[];
-  };
-  chapterManager: {
-    chapters: IChapter[];
-  };
-  trashBin: {
-    nodes: INode[];
-    edges: IEdge[];
-  };
-}
-
-interface ProjectContextType {
-  project: IProject;
-  setProject: React.Dispatch<React.SetStateAction<IProject | null>>;
-  activeFocusChapterId: string | null;
-  setActiveFocusChapterId: React.Dispatch<React.SetStateAction<string | null>>;
-  activeFilterCharId: string | null;
-  setActiveFilterCharId: React.Dispatch<React.SetStateAction<string | null>>;
-  updateNodes: (nodes: INode[]) => void;
-  updateEdges: (edges: IEdge[]) => void;
-  addCharacter: (char: ICharacter) => void;
-  addChapter: (chap: IChapter) => void;
-  updateCharacter: (charId: string, newName: string) => void;
-  updateChapter: (oldChapterId: string, newChapterId: string) => void;
-  removeCharacter: (charId: string) => void;
-  removeChapter: (chapterId: string) => void;
-}
-
-const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
-
-export const ProjectProvider: React.FC<{ children: ReactNode, projectId: string }> = ({ children, projectId }) => {
+export const ProjectProvider: React.FC<{ children: ReactNode; projectId: string }> = ({ children, projectId }) => {
   const [project, setProject] = useState<IProject | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [activeFocusChapterId, setActiveFocusChapterId] = useState<string | null>(null);
+  const [activeFilterCharId, setActiveFilterCharId] = useState<string | null>(null);
+
+  const projectRef = useRef<IProject | null>(null);
+  const isSavingRef = useRef(false);
+  const autosaveTimeoutRef = useRef<number | null>(null);
+  const lastSavedSnapshotRef = useRef<string | null>(null);
+
+  const clearAutosaveTimeout = useCallback(() => {
+    if (autosaveTimeoutRef.current !== null) {
+      window.clearTimeout(autosaveTimeoutRef.current);
+      autosaveTimeoutRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    projectRef.current = project;
+  }, [project]);
+
+  useEffect(() => {
+    isSavingRef.current = isSaving;
+  }, [isSaving]);
+
+  const saveProject = useCallback(async () => {
+    const currentProject = projectRef.current;
+    const currentSnapshot = snapshotProject(currentProject);
+
+    if (!currentProject?.metadata?.projectId || !currentSnapshot || isSavingRef.current) {
+      return false;
+    }
+
+    setIsSaving(true);
+    setSaveError(null);
+
+    try {
+      const response = await apiFetch(`/api/projects/${currentProject.metadata.projectId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(currentProject)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Save failed with status ${response.status}`);
+      }
+
+      lastSavedSnapshotRef.current = currentSnapshot;
+      setHasUnsavedChanges(false);
+      return true;
+    } catch (error) {
+      console.error('Error al guardar el proyecto:', error);
+      setSaveError('No se pudo guardar el proyecto.');
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
+  }, []);
 
   useEffect(() => {
     const loadProject = async () => {
+      clearAutosaveTimeout();
+
       try {
         setIsLoading(true);
-        const response = await fetch(`http://localhost:5000/api/projects/${projectId}`);
+        setLoadError(null);
+        setSaveError(null);
+        const response = await apiFetch(`/api/projects/${projectId}`);
         const json = await response.json();
-        
-        if (json.status === 'success' && json.data) {
-          setProject(json.data);
+
+        if (response.ok && json.status === 'success' && json.data) {
+          const loadedProject = json.data as IProject;
+          setProject(loadedProject);
+          lastSavedSnapshotRef.current = snapshotProject(loadedProject);
+          setHasUnsavedChanges(false);
         } else {
-          // If project fails to load, maybe throw or handle
-          console.error("No se pudo cargar el proyecto, devolvio:", json);
+          setProject(null);
+          lastSavedSnapshotRef.current = null;
+          setHasUnsavedChanges(false);
+          setLoadError(json.message || 'No se pudo cargar el proyecto.');
+          console.error('No se pudo cargar el proyecto, devolvio:', json);
         }
       } catch (error) {
-        console.error("Error al obtener el proyecto desde el backend:", error);
+        setProject(null);
+        lastSavedSnapshotRef.current = null;
+        setHasUnsavedChanges(false);
+        setLoadError('Error de red al cargar el proyecto.');
+        console.error('Error al obtener el proyecto desde el backend:', error);
       } finally {
         setIsLoading(false);
       }
     };
+
     loadProject();
-  }, [projectId]);
+  }, [clearAutosaveTimeout, projectId]);
+
+  useEffect(() => {
+    if (!project) {
+      clearAutosaveTimeout();
+      setHasUnsavedChanges(false);
+      return;
+    }
+
+    const currentSnapshot = snapshotProject(project);
+    if (!currentSnapshot || lastSavedSnapshotRef.current === null) {
+      setHasUnsavedChanges(false);
+      return;
+    }
+
+    const isDirty = currentSnapshot !== lastSavedSnapshotRef.current;
+    setHasUnsavedChanges(isDirty);
+
+    clearAutosaveTimeout();
+    if (!isDirty) {
+      return;
+    }
+
+    autosaveTimeoutRef.current = window.setTimeout(() => {
+      void saveProject();
+    }, AUTOSAVE_DELAY_MS);
+  }, [clearAutosaveTimeout, project, saveProject]);
+
+  useEffect(() => () => {
+    clearAutosaveTimeout();
+  }, [clearAutosaveTimeout]);
 
   const updateNodes = (nodes: INode[]) => {
     setProject((prev) => prev ? ({
@@ -145,25 +175,26 @@ export const ProjectProvider: React.FC<{ children: ReactNode, projectId: string 
   const updateCharacter = (charId: string, newName: string) => {
     setProject((prev) => prev ? ({
       ...prev,
-      characters: prev.characters.map(c => c.id === charId ? { ...c, name: newName } : c)
+      characters: prev.characters.map((char) => char.id === charId ? { ...char, name: newName } : char)
     }) : prev);
   };
 
   const updateChapter = (oldChapterId: string, newChapterId: string) => {
     setProject((prev) => {
       if (!prev) return prev;
-      const updatedNodes = prev.canvas.nodes.map(n => {
-        if (n.data.chapterId === oldChapterId) {
-          return { ...n, data: { ...n.data, chapterId: newChapterId } };
+
+      const updatedNodes = prev.canvas.nodes.map((node) => {
+        if (node.data.chapterId === oldChapterId) {
+          return { ...node, data: { ...node.data, chapterId: newChapterId } };
         }
-        return n;
+        return node;
       });
 
-      const updatedChapters = prev.chapterManager.chapters.map(c => {
-        if (c.chapterId === oldChapterId) {
-          return { ...c, chapterId: newChapterId };
+      const updatedChapters = prev.chapterManager.chapters.map((chapter) => {
+        if (chapter.chapterId === oldChapterId) {
+          return { ...chapter, chapterId: newChapterId };
         }
-        return c;
+        return chapter;
       });
 
       return {
@@ -177,59 +208,84 @@ export const ProjectProvider: React.FC<{ children: ReactNode, projectId: string 
   const removeCharacter = (charId: string) => {
     setProject((prev) => {
       if (!prev) return prev;
-      // Remover también los IDs de este personaje de todas las tarjetas
-      const updatedNodes = prev.canvas.nodes.map(n => ({
-        ...n,
+
+      const updatedNodes = prev.canvas.nodes.map((node) => ({
+        ...node,
         data: {
-          ...n.data,
-          characterTags: n.data.characterTags?.filter(id => id !== charId) || []
+          ...node.data,
+          characterTags: node.data.characterTags?.filter((id) => id !== charId) || []
         }
       }));
+
       return {
         ...prev,
-        characters: prev.characters.filter(c => c.id !== charId),
+        characters: prev.characters.filter((char) => char.id !== charId),
         canvas: { ...prev.canvas, nodes: updatedNodes }
       };
     });
   };
 
   const removeChapter = (chapterId: string) => {
-    setProject((prev) => prev ? ({
-      ...prev,
-      chapterManager: {
-        ...prev.chapterManager,
-        chapters: prev.chapterManager.chapters.filter(c => c.chapterId !== chapterId)
-      }
-    }) : prev);
+    setProject((prev) => {
+      if (!prev) return prev;
+
+      const updatedNodes = prev.canvas.nodes.map((node) => (
+        node.data.chapterId === chapterId
+          ? { ...node, data: { ...node.data, chapterId: '' } }
+          : node
+      ));
+
+      return {
+        ...prev,
+        canvas: { ...prev.canvas, nodes: updatedNodes },
+        chapterManager: {
+          ...prev.chapterManager,
+          chapters: prev.chapterManager.chapters.filter((chapter) => chapter.chapterId !== chapterId)
+        }
+      };
+    });
+
+    setActiveFocusChapterId((prev) => (prev === chapterId ? null : prev));
   };
 
-  const [activeFocusChapterId, setActiveFocusChapterId] = useState<string | null>(null);
-  const [activeFilterCharId, setActiveFilterCharId] = useState<string | null>(null);
-
   return (
-    <ProjectContext.Provider value={{ 
-        project: project as IProject, setProject, 
-        activeFocusChapterId, setActiveFocusChapterId,
-        activeFilterCharId, setActiveFilterCharId,
-        updateNodes, updateEdges, 
-        addCharacter, addChapter, updateCharacter, updateChapter, removeCharacter, removeChapter 
-    }}>
-      {isLoading || !project ? (
+    <ProjectContext.Provider
+      value={{
+        project: project as IProject,
+        setProject,
+        isSaving,
+        hasUnsavedChanges,
+        saveError,
+        saveProject,
+        activeFocusChapterId,
+        setActiveFocusChapterId,
+        activeFilterCharId,
+        setActiveFilterCharId,
+        updateNodes,
+        updateEdges,
+        addCharacter,
+        addChapter,
+        updateCharacter,
+        updateChapter,
+        removeCharacter,
+        removeChapter
+      }}
+    >
+      {isLoading ? (
         <div className="flex h-screen w-full items-center justify-center bg-slate-900 text-slate-300">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mb-4"></div>
-          <p className="ml-4 font-semibold text-lg tracking-wide">Desplegando Tapiz Narrativo...</p>
+          <p className="ml-4 font-semibold text-lg tracking-wide">Cargando proyecto...</p>
+        </div>
+      ) : loadError || !project ? (
+        <div className="flex h-screen w-full items-center justify-center bg-slate-900 text-slate-300 px-6">
+          <div className="max-w-md text-center">
+            <h2 className="text-xl font-semibold text-white mb-3">Proyecto no disponible</h2>
+            <p className="text-slate-400">{loadError || 'No se encontro el proyecto solicitado.'}</p>
+          </div>
         </div>
       ) : (
         children
       )}
     </ProjectContext.Provider>
   );
-};
-
-export const useProject = (): ProjectContextType => {
-  const context = useContext(ProjectContext);
-  if (!context) {
-    throw new Error('useProject must be used within a ProjectProvider');
-  }
-  return context;
 };

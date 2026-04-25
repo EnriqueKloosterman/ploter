@@ -1,27 +1,18 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import CharacterPanel from './CharacterPanel';
 import ChapterPanel from './ChapterPanel';
-import { useProject } from '../../context/ProjectContext';
+import { useProject } from '../../context/useProject';
 import { exportProjectToMarkdown } from '../ui/exportMarkdown';
 
 const SidebarArea: React.FC = () => {
-  const { project } = useProject();
-  const [isSaving, setIsSaving] = useState(false);
+  const { project, isSaving, hasUnsavedChanges, saveError, saveProject } = useProject();
   const navigate = useNavigate();
 
   const handleManualSave = async () => {
-    try {
-      setIsSaving(true);
-      await fetch(`http://localhost:5000/api/projects/${project.metadata?.projectId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(project)
-      });
-      setTimeout(() => setIsSaving(false), 800);
-    } catch (e) {
+    const didSave = await saveProject();
+    if (!didSave) {
       alert('Error al guardar el Proyecto');
-      setIsSaving(false);
     }
   };
 
@@ -32,12 +23,20 @@ const SidebarArea: React.FC = () => {
           onClick={() => navigate('/')}
           className="text-xs flex items-center gap-1 text-slate-400 hover:text-white transition-colors py-1 px-2 rounded hover:bg-slate-800 -ml-2"
         >
-          <span>←</span> Librería
+          <span>{'<'}</span> Biblioteca
         </button>
         <span className="text-xs font-mono text-slate-500 truncate max-w-[120px]">{project.metadata?.title}</span>
       </div>
       <div className="p-4 border-b border-slate-800/80 bg-slate-900/40 flex justify-between items-center">
-        <h2 className="text-xl font-bold text-slate-100 font-sans tracking-tight">Recursos Globales</h2>
+        <div>
+          <h2 className="text-xl font-bold text-slate-100 font-sans tracking-tight">Recursos Globales</h2>
+          {saveError && (
+            <p className="text-xs text-red-400 mt-1">{saveError}</p>
+          )}
+          {!saveError && hasUnsavedChanges && !isSaving && (
+            <p className="text-xs text-amber-300 mt-1">Hay cambios sin guardar</p>
+          )}
+        </div>
         <div className="flex gap-2">
           <button
             onClick={() => exportProjectToMarkdown(project)}
@@ -50,7 +49,7 @@ const SidebarArea: React.FC = () => {
           </button>
           <button
             onClick={handleManualSave}
-            disabled={isSaving}
+            disabled={isSaving || !hasUnsavedChanges}
             className="text-slate-400 hover:text-emerald-400 disabled:text-emerald-500 disabled:opacity-50 transition-colors bg-slate-800/50 hover:bg-slate-700/80 p-1.5 rounded-lg border border-slate-700/50 hover:border-emerald-500/50"
             title="Guardar Proyecto Manualmente"
           >
