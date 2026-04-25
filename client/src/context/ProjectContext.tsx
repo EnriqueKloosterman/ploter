@@ -71,10 +71,14 @@ interface ProjectContextType {
   setProject: React.Dispatch<React.SetStateAction<IProject | null>>;
   activeFocusChapterId: string | null;
   setActiveFocusChapterId: React.Dispatch<React.SetStateAction<string | null>>;
+  activeFilterCharId: string | null;
+  setActiveFilterCharId: React.Dispatch<React.SetStateAction<string | null>>;
   updateNodes: (nodes: INode[]) => void;
   updateEdges: (edges: IEdge[]) => void;
   addCharacter: (char: ICharacter) => void;
   addChapter: (chap: IChapter) => void;
+  updateCharacter: (charId: string, newName: string) => void;
+  updateChapter: (oldChapterId: string, newChapterId: string) => void;
   removeCharacter: (charId: string) => void;
   removeChapter: (chapterId: string) => void;
 }
@@ -108,38 +112,71 @@ export const ProjectProvider: React.FC<{ children: ReactNode, projectId: string 
   }, [projectId]);
 
   const updateNodes = (nodes: INode[]) => {
-    setProject((prev) => ({
+    setProject((prev) => prev ? ({
       ...prev,
       canvas: { ...prev.canvas, nodes }
-    }));
+    }) : prev);
   };
 
   const updateEdges = (edges: IEdge[]) => {
-    setProject((prev) => ({
+    setProject((prev) => prev ? ({
       ...prev,
       canvas: { ...prev.canvas, edges }
-    }));
+    }) : prev);
   };
 
   const addCharacter = (char: ICharacter) => {
-    setProject((prev) => ({
+    setProject((prev) => prev ? ({
       ...prev,
       characters: [...prev.characters, char]
-    }));
+    }) : prev);
   };
 
   const addChapter = (chap: IChapter) => {
-    setProject((prev) => ({
+    setProject((prev) => prev ? ({
       ...prev,
       chapterManager: {
         ...prev.chapterManager,
         chapters: [...prev.chapterManager.chapters, chap]
       }
-    }));
+    }) : prev);
+  };
+
+  const updateCharacter = (charId: string, newName: string) => {
+    setProject((prev) => prev ? ({
+      ...prev,
+      characters: prev.characters.map(c => c.id === charId ? { ...c, name: newName } : c)
+    }) : prev);
+  };
+
+  const updateChapter = (oldChapterId: string, newChapterId: string) => {
+    setProject((prev) => {
+      if (!prev) return prev;
+      const updatedNodes = prev.canvas.nodes.map(n => {
+        if (n.data.chapterId === oldChapterId) {
+          return { ...n, data: { ...n.data, chapterId: newChapterId } };
+        }
+        return n;
+      });
+
+      const updatedChapters = prev.chapterManager.chapters.map(c => {
+        if (c.chapterId === oldChapterId) {
+          return { ...c, chapterId: newChapterId };
+        }
+        return c;
+      });
+
+      return {
+        ...prev,
+        canvas: { ...prev.canvas, nodes: updatedNodes },
+        chapterManager: { ...prev.chapterManager, chapters: updatedChapters }
+      };
+    });
   };
 
   const removeCharacter = (charId: string) => {
     setProject((prev) => {
+      if (!prev) return prev;
       // Remover también los IDs de este personaje de todas las tarjetas
       const updatedNodes = prev.canvas.nodes.map(n => ({
         ...n,
@@ -157,23 +194,25 @@ export const ProjectProvider: React.FC<{ children: ReactNode, projectId: string 
   };
 
   const removeChapter = (chapterId: string) => {
-    setProject((prev) => ({
+    setProject((prev) => prev ? ({
       ...prev,
       chapterManager: {
         ...prev.chapterManager,
         chapters: prev.chapterManager.chapters.filter(c => c.chapterId !== chapterId)
       }
-    }));
+    }) : prev);
   };
 
   const [activeFocusChapterId, setActiveFocusChapterId] = useState<string | null>(null);
+  const [activeFilterCharId, setActiveFilterCharId] = useState<string | null>(null);
 
   return (
     <ProjectContext.Provider value={{ 
         project: project as IProject, setProject, 
         activeFocusChapterId, setActiveFocusChapterId,
+        activeFilterCharId, setActiveFilterCharId,
         updateNodes, updateEdges, 
-        addCharacter, addChapter, removeCharacter, removeChapter 
+        addCharacter, addChapter, updateCharacter, updateChapter, removeCharacter, removeChapter 
     }}>
       {isLoading || !project ? (
         <div className="flex h-screen w-full items-center justify-center bg-slate-900 text-slate-300">

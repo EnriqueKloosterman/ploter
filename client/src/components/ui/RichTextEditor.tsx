@@ -7,9 +7,10 @@ interface RichTextEditorProps {
   content: string;
   onChange: (content: string) => void;
   placeholder?: string;
+  minimal?: boolean;
 }
 
-const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChange, placeholder = 'Escribe aquí...' }) => {
+const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChange, placeholder = 'Escribe aquí...', minimal = false }) => {
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -29,7 +30,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChange, plac
   }
 
   return (
-    <div className="flex flex-col gap-2 w-full">
+    <div className="flex flex-col gap-1 w-full">
       {/* Menú de formato simple */}
       <div className="flex gap-1 border-b border-slate-700/50 pb-1 mb-1">
         <button
@@ -51,7 +52,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChange, plac
       </div>
       
       {/* Área de texto - Clases 'nowheel' y 'nodrag' son obligatorias en React Flow */}
-      <div className="nowheel nodrag bg-slate-900/50 p-2 rounded max-h-40 overflow-y-auto custom-scrollbar text-sm text-slate-200">
+      <div className={`nowheel nodrag rounded overflow-y-auto custom-scrollbar text-sm text-slate-200 ${minimal ? 'max-h-16 py-1' : 'bg-slate-900/50 p-2 max-h-40'}`}>
         <EditorContent editor={editor} className="outline-none" />
       </div>
     </div>

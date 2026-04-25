@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect, useRef } from 'react';
 import { ReactFlow, MiniMap, Controls, Background, useNodesState, useEdgesState, BackgroundVariant, addEdge, useReactFlow, reconnectEdge } from '@xyflow/react';
 import type { Connection, Node, Edge } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
@@ -7,6 +7,8 @@ import type { INodeData } from '../../context/ProjectContext';
 import PlotCardNode from './PlotCardNode';
 import PlotNodeModal from './PlotNodeModal';
 import ShortcutsModal from '../ui/ShortcutsModal';
+import EdgeModal from './EdgeModal';
+import { toPng } from 'html-to-image';
 
 const nodeTypes = {
   plot_card: PlotCardNode,
@@ -17,7 +19,10 @@ const CanvasAreaInner: React.FC = () => {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [isModalOpen, setModalOpen] = useState(false);
   const [isShortcutsOpen, setShortcutsOpen] = useState(false);
-  const { screenToFlowPosition } = useReactFlow();
+  const [editingEdge, setEditingEdge] = useState<Edge | null>(null);
+  const { screenToFlowPosition, setCenter } = useReactFlow();
+  
+  const flowContainerRef = useRef<HTMLDivElement>(null);
   
   // Transform our INode to React Flow's expected Node format.
   const [nodes, setNodes, onNodesChange] = useNodesState(project.canvas.nodes as unknown as Node[]);
@@ -60,6 +65,49 @@ const CanvasAreaInner: React.FC = () => {
     // Actualiza Context para Guardado DB
     updateNodes(freshNodes as unknown as typeof project.canvas.nodes);
   }, [nodes, setNodes, updateNodes]);
+
+  const handleEdgeClick = useCallback((_: React.MouseEvent, edge: Edge) => {
+    setEditingEdge(edge);
+  }, []);
+
+  const handleSaveEdge = useCallback((updatedEdge: Edge) => {
+    setEdges((eds) => {
+      const newEds = eds.map((e) => e.id === updatedEdge.id ? updatedEdge : e);
+      updateEdges(newEds as unknown as typeof project.canvas.edges);
+      return newEds;
+    });
+    setEditingEdge(null);
+  }, [setEdges, updateEdges]);
+
+  const handleDeleteEdge = useCallback((edgeId: string) => {
+    setEdges((eds) => {
+      const newEds = eds.filter((e) => e.id !== edgeId);
+      updateEdges(newEds as unknown as typeof project.canvas.edges);
+      return newEds;
+    });
+    setEditingEdge(null);
+  }, [setEdges, updateEdges]);
+
+  const handleExport = useCallback(() => {
+    if (flowContainerRef.current === null) return;
+    
+    const controls = flowContainerRef.current.querySelector('.react-flow__panel') as HTMLElement;
+    if (controls) controls.style.display = 'none';
+
+    toPng(flowContainerRef.current, {
+      backgroundColor: '#0f172a',
+      pixelRatio: 2,
+    }).then((dataUrl) => {
+      const link = document.createElement('a');
+      link.download = `PlotWeaver_Export_${Date.now()}.png`;
+      link.href = dataUrl;
+      link.click();
+      if (controls) controls.style.display = 'block';
+    }).catch(err => {
+      console.error('Error exporting image:', err);
+      if (controls) controls.style.display = 'block';
+    });
+  }, []);
 
   // Referencia mutable para el autosave sin regenerar el ciclo
   const projectRef = React.useRef(project);
@@ -209,7 +257,7 @@ const CanvasAreaInner: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 relative bg-slate-900 border-l border-white/5 h-full w-full min-h-screen">
+    <div className="flex-1 relative bg-slate-900 border-l border-white/5 h-full w-full min-h-screen" ref={flowContainerRef}>
       
       {/* Top Bar Floating Commands */}
       <div className="absolute top-4 right-4 z-10 flex gap-3 items-center">
@@ -218,6 +266,13 @@ const CanvasAreaInner: React.FC = () => {
             Guardado ✅
           </span>
         )}
+        <button 
+          onClick={handleExport}
+          className="w-9 h-9 flex items-center justify-center bg-slate-800/80 hover:bg-slate-700 text-pink-400 font-bold rounded-lg border border-slate-700/50 shadow-lg backdrop-blur-sm transition-all hover:scale-105"
+          title="Exportar a Imagen HD"
+        >
+          📷
+        </button>
         <button 
           onClick={() => setShortcutsOpen(true)}
           className="w-9 h-9 flex items-center justify-center bg-slate-800/80 hover:bg-slate-700 text-blue-400 font-bold rounded-lg border border-slate-700/50 shadow-lg backdrop-blur-sm transition-all hover:scale-105"
@@ -246,6 +301,7 @@ const CanvasAreaInner: React.FC = () => {
         onReconnect={onReconnect}
         onConnectEnd={onConnectEnd}
         onNodeClick={handleNodeClick}
+        onEdgeClick={handleEdgeClick}
         fitView
       >
         <Controls />
@@ -256,9 +312,18 @@ const CanvasAreaInner: React.FC = () => {
           pannable 
           maskColor="rgba(15, 23, 42, 0.7)"
           style={{ backgroundColor: '#1e293b', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}
+          onNodeClick={(_, node) => setCenter(node.position.x + 125, node.position.y + 125, { duration: 800, zoom: 1.2 })}
         />
         <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
       </ReactFlow>
+
+      <EdgeModal 
+        isOpen={editingEdge !== null}
+        edge={editingEdge}
+        onClose={() => setEditingEdge(null)}
+        onSave={handleSaveEdge}
+        onDelete={handleDeleteEdge}
+      />
 
       {isModalOpen && selectedNode && (
         <PlotNodeModal

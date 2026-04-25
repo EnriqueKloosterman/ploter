@@ -58,14 +58,14 @@ const PlotNodeModal: React.FC<Props> = ({ isOpen, onClose, node, onSave }) => {
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
             <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Título</label>
-            <input 
-              type="text" 
-              value={formData.title || ''}
-              onChange={(e) => setFormData({...formData, title: e.target.value})}
-              className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              placeholder="Ej. El Descubrimiento"
-              autoFocus
-            />
+            <div className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 focus-within:ring-2 focus-within:ring-blue-500 transition-all">
+              <RichTextEditor 
+                content={formData.title || ''}
+                onChange={(newTitle) => setFormData({...formData, title: newTitle})}
+                placeholder="Ej. El Descubrimiento"
+                minimal={true}
+              />
+            </div>
           </div>
 
           <div>

@@ -18,11 +18,13 @@ const getColorAccent = (colorName?: string) => {
 };
 
 const PlotCardNode: React.FC<NodeProps> = ({ data, selected }) => {
-  const { project, activeFocusChapterId } = useProject();
+  const { project, activeFocusChapterId, activeFilterCharId } = useProject();
   const nodeData = data as unknown as INodeData;
   const accentClass = getColorAccent(nodeData.color);
 
   const isFocused = activeFocusChapterId === null || activeFocusChapterId === nodeData.chapterId;
+  const isFiltered = activeFilterCharId !== null && !(nodeData.characterTags || []).includes(activeFilterCharId);
+  const isDimmed = !isFocused || isFiltered;
 
   return (
     <div
@@ -32,7 +34,7 @@ const PlotCardNode: React.FC<NodeProps> = ({ data, selected }) => {
         transition-all duration-500 ease-in-out cursor-pointer
         ${selected ? 'ring-2 ring-blue-500 scale-105 shadow-2xl' : 'hover:scale-[1.02] hover:border-white/20 shadow-xl'}
         ${selected ? `shadow-[0_0_20px_rgba(59,130,246,0.3)]` : ''}
-        ${!isFocused ? 'opacity-20 grayscale pointer-events-none saturate-0' : 'opacity-100'}
+        ${isDimmed ? 'opacity-20 grayscale pointer-events-none saturate-0' : 'opacity-100'}
       `}
     >
       {/* Top Input Handle */}
@@ -55,9 +57,10 @@ const PlotCardNode: React.FC<NodeProps> = ({ data, selected }) => {
       <div className="p-4 flex flex-col gap-3">
         {/* Header: Title and Category Tags */}
         <div className="flex justify-between items-start gap-2">
-          <h3 className="text-slate-100 font-bold text-sm tracking-wide leading-tight line-clamp-2">
-            {nodeData.title || 'Untitled Node'}
-          </h3>
+          <h3 
+            className="text-slate-100 font-bold text-sm tracking-wide leading-tight line-clamp-2"
+            dangerouslySetInnerHTML={{ __html: (nodeData.title && nodeData.title !== '<p></p>') ? nodeData.title : 'Untitled Node' }}
+          />
           
           {/* Category Tag pill mock */}
           {nodeData.categoryTags && nodeData.categoryTags.length > 0 && (
@@ -78,7 +81,7 @@ const PlotCardNode: React.FC<NodeProps> = ({ data, selected }) => {
         {/* Footer: Characters associated */}
         {nodeData.characterTags && nodeData.characterTags.length > 0 && (
           <div className="pt-2 mt-1 border-t border-slate-700/50 flex flex-wrap gap-1">
-            <span className="text-[9px] text-slate-500 font-medium mr-1 uppercase self-center uppercase tracking-wider">Roles:</span>
+            <span className="text-[9px] text-slate-500 font-medium mr-1 uppercase self-center tracking-wider">Roles:</span>
             {nodeData.characterTags.map((charId, idx) => {
               const globalChar = project.characters.find(c => c.id === charId);
               return (
