@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+echo "--- Pre-commit: client typecheck ---"
+cd client && pnpm typecheck || exit 1
+
+echo "--- Pre-commit: server typecheck ---"
+cd ../server && pnpm typecheck || exit 1
+
+echo "--- Pre-commit: client tests ---"
+cd ../client && pnpm test || exit 1
+
+echo "--- Pre-commit: server tests ---"
+cd ../server && pnpm test || exit 1
+
+echo "--- Pre-commit: passed ---"

@@ -2,6 +2,19 @@ export interface ICharacter {
   id: string;
   name: string;
   image?: { url: string; width: number; height: number };
+  biography?: string;
+  appearance?: string;
+  psychology?: string;
+  backstory?: string;
+}
+
+export interface ICharacterRelation {
+  id: string;
+  sourceId: string;
+  targetId: string;
+  type: 'familia' | 'romance' | 'enemistad' | 'aliado' | 'mentor';
+  label?: string;
+  description?: string;
 }
 
 export interface INodeData {
@@ -11,6 +24,7 @@ export interface INodeData {
   categoryTags?: string[];
   characterTags?: string[];
   chapterId?: string;
+  [key: string]: unknown;
 }
 
 export interface INode {
@@ -27,6 +41,7 @@ export interface IEdge {
   sourceHandle?: string;
   targetHandle?: string;
   label?: string;
+  type?: 'normal' | 'causa' | 'conflicto';
 }
 
 export interface IBeat {
@@ -38,9 +53,10 @@ export interface IBeat {
 export interface IChapter {
   chapterId: string;
   beats: IBeat[];
+  manuscriptContent?: string;
 }
 
-export interface IProject {
+export interface IProjectData {
   metadata: {
     projectId: string;
     title: string;
@@ -48,6 +64,7 @@ export interface IProject {
     lastModified: string;
   };
   characters: ICharacter[];
+  characterRelations: ICharacterRelation[];
   canvas: {
     viewport: { x: number; y: number; zoom: number };
     nodes: INode[];
@@ -56,8 +73,6 @@ export interface IProject {
   chapterManager: {
     chapters: IChapter[];
   };
-  trashBin: {
-    nodes: INode[];
-    edges: IEdge[];
-  };
 }
+
+export type IProject = IProjectData;

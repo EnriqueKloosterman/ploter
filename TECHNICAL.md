@@ -2,114 +2,143 @@
 
 ## 1. Introducción
 
-**PlotWeaver** es una herramienta de planificación narrativa para escritores que funciona como un "lienzo de tramas" digital. Permite gestionar historias complejas mediante nodos interconectados (representando escenas/tramas), personajes y capítulos, con un sistema de versiones basado en "Snapshots" para garantizar la seguridad del trabajo.
+**PlotWeaver** es una herramienta de planificación narrativa para escritores que funciona como un "lienzo de tramas" digital. Permite gestionar historias complejas mediante nodos interconectados (escenas/tramas), personajes, capítulos, línea de tiempo, editor de manuscrito, grafo de relaciones, exportación multi-formato y asistente IA.
 
-### Propósito
-- Diseñar y visualizar estructuras narrativas completas
-- Gestionar personajes y su aparición en diferentes tramas
-- Organizar capítulos y sus escenas vinculadas
-- Mantener historial de versiones inmutables
+### Tecnologías principales
 
-### Audiencia
-Esta documentación está dirigida a desarrolladores que deseen entender, extender o mantener el proyecto.
-
----
-
-## 2. Stack Tecnológico
-
-### Frontend
-| Tecnología | Versión | Propósito |
-|-------------|---------|----------|
-| React | 19.2.4 | Framework UI |
-| Vite | 8.0.4 | Build tool y HMR |
-| Tailwind CSS | 4.2.2 | Estilos |
-| @xyflow/react | 12.10.2 | Canvas interactivo |
-| @tiptap/react | 3.22.4 | Editor de texto enriquecido |
-| react-router-dom | 7.14.0 | Enrutamiento |
-| html-to-image | 1.11.13 | Exportación a imagen |
-
-### Backend
-| Tecnología | Versión | Propósito |
-|-------------|---------|----------|
-| Node.js | - | Runtime |
-| Express | 5.2.1 | Framework servidor |
-| Mongoose | 9.4.1 | ODM MongoDB |
-| TypeScript | 6.0.2 | Tipado estático |
-| tsx | 4.21.0 | Ejecución TS |
+| Capa | Tecnología | Versión |
+|------|-----------|---------|
+| Frontend | React + Vite + Tailwind CSS | 19 / 8 / 4 |
+| Canvas | @xyflow/react (React Flow) | 12 |
+| Editor | @tiptap/react | 3 |
+| Backend | Express | 5 |
+| ORM | Mongoose | 9 |
+| BD | MongoDB | - |
+| Lenguaje | TypeScript | 6 |
+| Paquetería | pnpm | 10 |
 
 ---
 
-## 3. Arquitectura del Sistema
-
-### Diagrama de Componentes
+## 2. Estructura del Proyecto
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        CLIENTE (React)                        │
-│  ┌──────────────┐   ┌─────────────────┐   ┌─────────────┐  │
-│  │  Dashboard  │──▶│    Workspace    │◀──│  Sidebar   │  │
-│  │  (Proyectos)│   │   (Canvas)     │   │(Personajes)│  │
-│  └──────────────┘   └─────────────────┘   └─────────────┘  │
-│         │                   │                   │           │
-│         └───────────────────┴───────────────────┘           │
-│                             │                                │
-│                    ProjectContext                           │
-│                    (Estado global)                         │
-└─────────────────────────────┬──────────────────────────────┘
-                              │
-                    ┌─────────▼─────────┐
-                    │   lib/api.ts    │
-                    │ (Llamadas HTTP) │
-                    └─────────┬─────────┘
-                              │
-┌─────────────────────────────▼──────────────────────────────┐
-│                      SERVIDOR (Express)                      │
-│  ┌──────────────┐   ┌─────────────────┐   ┌─────────────┐  │
-│  │ Project API │   │ Snapshot API   │   │  Health    │  │
-│  │  /projects │   │  /snapshots    │   │  /health  │  │
-│  └──────┬──────┘   └────────┬────────┘   └─────────────┘  │
-│         │                   │                               │
-│  ┌──────▼──────────────────▼──────┐                    │
-│  │         Controladores               │                    │
-│  │  projectController.ts             │                    │
-│  │  snapshotController.ts          │                    │
-│  └──────────────┬──────────────────────┘                    │
-│                 │                                            │
-│  ┌──────────────▼──────────────────────┐                    │
-│  │       Modelos (Mongoose)           │                    │
-│  │  Project, Snapshot, User          │                    │
-│  └────────────────────┬───────────┘                       │
-└───────────────────────┼─────────────────────────────────┘
-                        │
-                 ┌──────▼──────┐
-                 │  MongoDB    │
-                 └─────────────┘
-```
+plotDesigner/
+├── client/                          # Frontend React
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── Auth/                # Login, Register, ProtectedRoute
+│   │   │   ├── Canvas/              # Canvas principal + vistas alternas
+│   │   │   │   ├── CanvasArea.tsx        # Lienzo con React Flow
+│   │   │   │   ├── PlotCardNode.tsx      # Nodo personalizado
+│   │   │   │   ├── PlotNodeModal.tsx     # Modal edición nodo
+│   │   │   │   ├── EdgeModal.tsx         # Modal edición arista
+│   │   │   │   ├── OutlineView.tsx       # Vista esquema
+│   │   │   │   ├── TimelineView.tsx      # Línea de tiempo
+│   │   │   │   ├── ManuscriptEditor.tsx  # Editor de manuscrito
+│   │   │   │   ├── CharacterGraphView.tsx # Grafo relaciones
+│   │   │   │   ├── CharacterNode.tsx     # Nodo personaje para grafo
+│   │   │   │   ├── RelationEditModal.tsx # Modal editar relación
+│   │   │   │   ├── AIPanel.tsx           # Asistente IA (4 funciones)
+│   │   │   │   └── ExportModal.tsx       # Exportación (5 formatos)
+│   │   │   ├── Dashboard/            # Lista de proyectos
+│   │   │   ├── Sidebar/              # Paneles laterales
+│   │   │   │   ├── CharacterPanel.tsx    # CRUD personajes + campos expandidos
+│   │   │   │   ├── ChapterPanel.tsx      # CRUD capítulos + beats
+│   │   │   │   ├── SidebarArea.tsx       # Sidebar colapsable
+│   │   │   │   └── ProjectStats.tsx      # Estadísticas del proyecto
+│   │   │   └── ui/                   # Componentes reutilizables
+│   │   │       ├── RichTextEditor.tsx
+│   │   │       ├── ConfirmModal.tsx
+│   │   │       ├── InputModal.tsx
+│   │   │       ├── ShortcutsModal.tsx
+│   │   │       ├── TagsModal.tsx
+│   │   │       ├── SnapshotsModal.tsx
+│   │   │       ├── ErrorBoundary.tsx
+│   │   │       ├── ProjectStats.tsx
+│   │   │       ├── exportMarkdown.ts
+│   │   │       └── exportMarkdown.test.ts
+│   │   ├── context/                  # Estado global
+│   │   │   ├── AuthContext.tsx           # Auth (login/register/logout)
+│   │   │   ├── UserContext.tsx           # Datos de usuario
+│   │   │   ├── ProjectContext.tsx        # Estado del proyecto + CRUD
+│   │   │   ├── useProject.ts            # Hook + types del context
+│   │   │   ├── projectTypes.ts          # Interfaces compartidas
+│   │   │   └── ToastContext.tsx          # Notificaciones toast
+│   │   ├── lib/
+│   │   │   ├── api.ts               # Cliente HTTP con auth + 401 redirect
+│   │   │   ├── api.test.ts          # Tests de apiFetch (7 tests)
+│   │   │   ├── upload.ts            # Subida de imágenes
+│   │   │   ├── sanitizeHtml.ts
+│   │   │   └── sanitizeHtml.test.ts # Tests sanitizeRichTextHtml (13 tests)
+│   │   ├── components/ui/exportMarkdown.ts
+│   │   └── components/ui/exportMarkdown.test.ts # Tests htmlToMarkdown + generateProjectMarkdown (17 tests)
+│   │   ├── App.tsx                  # Router principal + providers
+│   │   ├── Workspace.tsx            # Layout del workspace
+│   │   └── main.tsx                 # Entry point
+│   ├── vite.config.ts
+│   └── package.json
+│
+├── server/                          # Backend Express
+│   ├── src/
+│   │   ├── config/
+│   │   │   ├── db.ts                    # Conexión MongoDB
+│   │   │   └── seed.ts                  # Usuario por defecto
+│   │   ├── middleware/
+│   │   │   └── auth.ts                  # JWT verify + generateToken
+│   │   ├── controllers/
+│   │   │   ├── authController.ts        # register, login, me
+│   │   │   ├── projectController.ts     # CRUD proyectos
+│   │   │   ├── snapshotController.ts    # Snapshots (append-only)
+│   │   │   ├── userController.ts        # Perfil + library/tags
+│   │   │   ├── uploadController.ts      # Subida de archivos
+│   │   │   ├── exportController.ts      # Export PDF/DOCX/EPUB/HTML/Fountain
+│   │   │   └── aiController.ts          # IA (sugerencias, nombres, huecos, resumen)
+│   │   ├── models/
+│   │   │   ├── Project.ts               # Schema proyecto
+│   │   │   ├── Snapshot.ts              # Schema snapshot
+│   │   │   └── User.ts                  # Schema usuario
+│   │   ├── routes/
+│   │   │   ├── authRoutes.ts
+│   │   │   ├── projectRoutes.ts
+│   │   │   ├── snapshotRoutes.ts
+│   │   │   ├── userRoutes.ts
+│   │   │   ├── uploadRoutes.ts
+│   │   │   ├── exportRoutes.ts
+│   │   │   └── aiRoutes.ts
+│   │   ├── types/
+│   │   │   └── epub-gen.d.ts            # Type declaration
+│   │   └── app.ts                       # Entry point + montaje rutas
+│   ├── .env                             # Config (MONGO_URI, JWT_SECRET, AI)
+│   └── package.json
 
-### Flujo de Datos
-1. El usuario interactúa con el canvas (React Flow)
-2. Los cambios se reflejan en el estado local (React)
-3. El `ProjectContext` detecta cambios y sincroniza con el servidor
-4. El servidor procesa la petición y actualiza MongoDB
-5. El sistema de Snapshots permite guardar versiones inmutables
+```
 
 ---
 
-## 4. Modelos de Datos
+## 3. Modelos de Datos
 
-### 4.1 Frontend (TypeScript)
-
-Ubicación: `client/src/context/projectTypes.ts`
+### 3.1 Interfaces del Proyecto
 
 ```typescript
-// Personaje dentro de un proyecto
 interface ICharacter {
   id: string;
   name: string;
   image?: { url: string; width: number; height: number };
+  biography?: string;
+  appearance?: string;
+  psychology?: string;
+  backstory?: string;
 }
 
-// Datos de un nodo (tarjeta de trama)
+interface ICharacterRelation {
+  id: string;
+  sourceId: string;
+  targetId: string;
+  type: 'familia' | 'romance' | 'enemistad' | 'aliado' | 'mentor';
+  label?: string;
+  description?: string;
+}
+
 interface INodeData {
   title?: string;
   content?: string;
@@ -117,9 +146,9 @@ interface INodeData {
   categoryTags?: string[];
   characterTags?: string[];
   chapterId?: string;
+  [key: string]: unknown;
 }
 
-// Nodo en el canvas
 interface INode {
   id: string;
   type: string;
@@ -127,7 +156,6 @@ interface INode {
   data: INodeData;
 }
 
-// Conexión entre nodos
 interface IEdge {
   id: string;
   source: string;
@@ -135,23 +163,22 @@ interface IEdge {
   sourceHandle?: string;
   targetHandle?: string;
   label?: string;
+  type?: 'normal' | 'causa' | 'conflicto';
 }
 
-// Beat (escena dentro de un capítulo)
 interface IBeat {
   id: string;
   description: string;
   linkedNodes: string[];
 }
 
-// Capítulo
 interface IChapter {
   chapterId: string;
   beats: IBeat[];
+  manuscriptContent?: string;
 }
 
-// Proyecto completo
-interface IProject {
+interface IProjectData {
   metadata: {
     projectId: string;
     title: string;
@@ -159,6 +186,7 @@ interface IProject {
     lastModified: string;
   };
   characters: ICharacter[];
+  characterRelations: ICharacterRelation[];
   canvas: {
     viewport: { x: number; y: number; zoom: number };
     nodes: INode[];
@@ -167,269 +195,274 @@ interface IProject {
   chapterManager: {
     chapters: IChapter[];
   };
-  trashBin: {
-    nodes: INode[];
-    edges: IEdge[];
-  };
 }
 ```
 
-### 4.2 Backend (Mongoose)
+### 3.2 Modelo Mongoose (`server/src/models/Project.ts`)
 
-Ubicación: `server/src/models/Project.ts`
+- `metadata`: subdocumento embebido (`projectId`, `title`, `createdAt`, `lastModified`)
+- `authorId`: `ObjectId` ref → `User`
+- `characters`: array embebido de `ICharacter`
+- `characterRelations`: array embebido de `ICharacterRelation`
+- `canvas.viewport`, `canvas.nodes`, `canvas.edges`: arrays embebidos
+- `chapterManager.chapters`: array embebido de `IChapter` (con `manuscriptContent` y `beats`)
 
-El esquema de MongoDB replica la estructura del tipo `IProject` con algunas diferencias:
-
-- Usa `Schema.Types.ObjectId` para referencias
-- Usa `Date` en lugar de `string` para fechas
-- Añade `authorId` referenciando al modelo `User`
-
-### 4.3 Snapshot (Versiones)
-
-Ubicación: `server/src/models/Snapshot.ts`
+### 3.3 Modelo Snapshot (`server/src/models/Snapshot.ts`)
 
 ```typescript
-interface ISnapshot extends Document {
-  projectId: mongoose.Types.ObjectId;
+interface ISnapshot {
+  projectId: ObjectId;
   description: string;
-  projectData: Partial<IProject>;
+  projectData: IProjectData;  // Clon inmutable del proyecto
   createdAt: Date;
 }
 ```
 
-> **Principio de Diseño**: Los Snapshots guardan un clon inmutable del estado completo del proyecto. Una versión guardada nunca se sobrescribe; se crea una nueva entrada.
-
 ---
 
-## 5. Endpoints de la API
+## 4. API Endpoints
 
-### 5.1 Projects API
+### 4.1 Auth (`/api/auth`)
+
+| Método | Endpoint | Body | Respuesta |
+|--------|----------|------|-----------|
+| POST | `/api/auth/register` | `{ email, password, name }` | `{ token, user }` |
+| POST | `/api/auth/login` | `{ email, password }` | `{ token, user }` |
+| GET | `/api/auth/me` | - (auth header) | `{ user }` |
+
+### 4.2 Proyectos (`/api/projects`)
 
 | Método | Endpoint | Descripción |
-|--------|----------|------------|
-| GET | `/api/projects` | Lista todos los proyectos |
-| POST | `/api/projects` | Crea un nuevo proyecto |
-| GET | `/api/projects/:projectId` | Obtiene un proyecto por ID |
-| PUT | `/api/projects/:projectId` | Actualiza un proyecto |
-| DELETE | `/api/projects/:projectId` | Elimina un proyecto |
+|--------|----------|-------------|
+| GET | `/api/projects` | Lista proyectos del usuario autenticado |
+| POST | `/api/projects` | Crear proyecto (`{ title }`) |
+| GET | `/api/projects/:projectId` | Obtener proyecto completo |
+| PUT | `/api/projects/:projectId` | Actualizar proyecto (merge parcial) |
+| DELETE | `/api/projects/:projectId` | Eliminar proyecto |
 
-#### GET /api/projects
-```json
-{
-  "status": "success",
-  "data": [{
-    "metadata": {
-      "projectId": "proj_123456",
-      "title": "Mi Historia",
-      "createdAt": "2024-01-01T00:00:00.000Z",
-      "lastModified": "2024-01-02T00:00:00.000Z"
-    }
-  }]
-}
-```
-
-#### POST /api/projects
-```json
-{ "title": "Nueva Historia" }
-```
-
-#### PUT /api/projects/:projectId
-```json
-{
-  "metadata": { "title": "Título actualizado" },
-  "canvas": { "nodes": [...], "edges": [...] },
-  "characters": [...],
-  "chapterManager": { "chapters": [...] }
-}
-```
-
-### 5.2 Snapshots API
+### 4.3 Snapshots (`/api/snapshots`)
 
 | Método | Endpoint | Descripción |
-|--------|----------|------------|
-| GET | `/api/snapshots/:projectId` | Lista versiones del proyecto |
-| POST | `/api/snapshots/:projectId` | Crea una nueva versión |
+|--------|----------|-------------|
+| GET | `/api/snapshots/:projectId` | Listar snapshots |
+| POST | `/api/snapshots/:projectId` | Crear snapshot (`{ description }`) |
 
-#### POST /api/snapshots/:projectId
-```json
-{ "description": "Guardado antes del capítulo 3" }
-```
-
-```json
-{
-  "status": "success",
-  "data": {
-    "_id": "snap_...",
-    "projectId": "proj_...",
-    "description": "Guardado antes del capítulo 3",
-    "projectData": { },
-    "createdAt": "2024-01-02T00:00:00.000Z"
-  }
-}
-```
-
-### 5.3 Health Check
+### 4.4 Usuario (`/api/user`)
 
 | Método | Endpoint | Descripción |
-|--------|----------|------------|
-| GET | `/api/health` | Verifica que el servidor funciona |
+|--------|----------|-------------|
+| GET | `/api/user/me` | Perfil + library |
+| PUT | `/api/user/me/library/tags` | Actualizar globalTags |
+
+### 4.5 Upload (`/api/upload`)
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| POST | `/api/upload` | Subir imagen (multer) |
+
+### 4.6 Export (`/api/export`)
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/export/:projectId/html` | HTML autocontenido |
+| GET | `/api/export/:projectId/pdf` | PDF (pdfkit) |
+| GET | `/api/export/:projectId/docx` | DOCX (docx lib) |
+| GET | `/api/export/:projectId/epub` | EPUB (epub-gen) |
+| GET | `/api/export/:projectId/fountain` | Fountain (texto) |
+
+### 4.7 AI (`/api/ai`)
+
+| Método | Endpoint | Body | Descripción |
+|--------|----------|------|-------------|
+| POST | `/api/ai/:projectId/suggest-plot` | `{ focus? }` | 3 giros argumentales |
+| POST | `/api/ai/:projectId/generate-names` | `{ count?, style? }` | Nombres de personajes |
+| POST | `/api/ai/:projectId/plot-holes` | - | Huecos argumentales |
+| POST | `/api/ai/:projectId/summarize` | `{ chapterId? }` | Resumen (capítulo o proyecto) |
+
+### 4.8 Health
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/health` | Health check |
+
+> Todos los endpoints excepto `/api/auth/*` y `/api/health` requieren header `Authorization: Bearer <token>`.
 
 ---
 
-## 6. Estructura del Proyecto
+## 5. Autenticación y Seguridad
 
+### JWT Flow
+1. `POST /api/auth/login` o `/register` devuelve `{ token, user }`
+2. El frontend almacena el token en `localStorage('plotweaver_token')`
+3. Cada request incluye `Authorization: Bearer <token>`
+4. `authMiddleware` verifica el token y adjunta `{ userId, authorId, email }` a `req.user`
+5. En 401, el frontend limpia el token y redirige a `/login`
+
+### Seed por defecto
+- Email: `admin@plotweaver.com` / Password: `admin123` (configurable via `SEED_EMAIL`/`SEED_PASSWORD` en `.env`)
+- Se crea automáticamente al iniciar el servidor si no existe un usuario con ese email
+
+### Configuración `.env`
 ```
-plotDesigner/
-├── client/
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── Canvas/
-│   │   │   │   ├── CanvasArea.tsx
-│   │   │   │   ├── PlotCardNode.tsx
-│   │   │   │   ├── PlotNodeModal.tsx
-│   │   │   │   └── EdgeModal.tsx
-│   │   │   ├── Dashboard/
-│   │   │   ├── Sidebar/
-│   │   │   │   ├── CharacterPanel.tsx
-│   │   │   │   ├── ChapterPanel.tsx
-│   │   │   │   └── SidebarArea.tsx
-│   │   │   └── ui/
-│   │   │       ├── RichTextEditor.tsx
-│   │   │       ├── ConfirmModal.tsx
-│   │   │       ├── ShortcutsModal.tsx
-│   │   │       └── exportMarkdown.ts
-│   │   ├── context/
-│   │   │   ├── ProjectContext.tsx
-│   │   │   ├── useProject.ts
-│   │   │   └── projectTypes.ts
-│   │   ├── lib/
-│   │   │   ├── api.ts
-│   │   │   └── sanitizeHtml.ts
-│   │   ├── App.tsx
-│   │   ├── Workspace.tsx
-│   │   └── main.tsx
-│   └── package.json
-│
-├── server/
-│   ├── src/
-│   │   ├── config/
-│   │   │   └── db.ts
-│   │   ├── controllers/
-│   │   │   ├── projectController.ts
-│   │   │   └── snapshotController.ts
-│   │   ├── models/
-│   │   │   ├── Project.ts
-│   │   │   ├── Snapshot.ts
-│   │   │   └── User.ts
-│   │   ├── routes/
-│   │   │   ├── projectRoutes.ts
-│   │   │   └── snapshotRoutes.ts
-│   │   └── app.ts
-│   └── package.json
-│
-└── docs/
-    └── context.md
+MONGO_URI=mongodb://localhost:27017/plotweaver
+JWT_SECRET=plotweaver-dev-secret-key-change-in-production
+PORT=5000
+SEED_EMAIL=admin@plotweaver.com
+SEED_PASSWORD=admin123
+
+# AI - Nube (OpenAI)
+# OPENAI_API_KEY=sk-...
+# OPENAI_MODEL=gpt-4o-mini
+
+# AI - Local (LM Studio)
+OPENAI_BASE_URL=http://localhost:1234/v1
+OPENAI_MODEL=nombre-del-modelo
 ```
 
 ---
 
-## 7. Guía de Uso
+## 6. Vistas del Canvas
 
-### 7.1 Requisitos Previos
-- Node.js (recomendado ≥ 18)
-- pnpm
-- MongoDB (local o remoto)
+El workspace tiene 5 vistas alternas, mutuamente excluyentes, activables desde la toolbar:
 
-### 7.2 Instalación
+| Botón | Vista | Componente | Descripción |
+|-------|-------|-----------|-------------|
+| ≡ | Outline | `OutlineView.tsx` | Árbol capítulos → escenas |
+| 🕐 | Timeline | `TimelineView.tsx` | Línea temporal horizontal con drag reorder |
+| 📄 | Manuscrito | `ManuscriptEditor.tsx` | Editor TipTap por capítulo + export TXT/HTML |
+| 👥 | Grafo personajes | `CharacterGraphView.tsx` | React Flow con relaciones entre personajes |
+| ✨ | Asistente IA | `AIPanel.tsx` | 4 herramientas de IA conversacional |
+
+---
+
+## 7. Contextos y Estado Global
+
+### AuthContext
+- `user`, `token`, `isAuthenticated`, `isLoading`
+- `login(email, password)`, `register(email, password, name)`, `logout()`
+
+### ProjectContext
+- `project` (non-nullable via early return pattern — ver línea 450 de `ProjectContext.tsx`)
+- `isSaving`, `hasUnsavedChanges`, `canUndo`, `canRedo`
+- `saveProject()`, `undo()`, `redo()`, `addChapter()`, `addCharacter()`
+- CRUD nodos: `addNode`, `updateNodes`, `deleteNodes`
+- CRUD aristas: `updateEdges`
+- CRUD personajes: `updateCharacters`
+- CRUD relaciones: `addRelation`, `updateRelation`, `removeRelation`
+- Capítulos: `updateChapters`, `reorderChapters`, `updateChapterManuscript`
+- Auto-save: 5 segundos después del último cambio
+- Undo/Redo: stack de hasta 50 estados
+
+### UserContext
+- Datos del usuario (usa `AuthContext` internamente)
+- Tags globales
+
+---
+
+## 8. AI Writing Assistant
+
+### Configuración
+- **Lazy init**: el cliente OpenAI se crea en el primer uso, no al importar
+- Soporta OpenAI nube (`OPENAI_API_KEY`) y local (`OPENAI_BASE_URL`)
+- Sin API key requerida si se usa baseURL local (LM Studio, Ollama)
+- Modelo configurable via `OPENAI_MODEL` (default: `gpt-4o-mini`)
+
+### Endpoints (todos POST)
+1. **suggest-plot**: Contexto completo del proyecto → 3 giros argumentales
+2. **generate-names**: Lista numerada de nombres (filtrables por estilo)
+3. **plot-holes**: Análisis de inconsistencias narrativas
+4. **summarize**: Resumen de capítulo individual o proyecto completo
+
+### Prompt engineering
+- Cada función usa `system prompt` especializado
+- El contexto del proyecto se construye con `buildProjectContext()`: incluye título, personajes, escenas (nodos), capítulos y manuscripto
+
+---
+
+## 9. Exportación
+
+### Formatos
+| Formato | Librería | Contenido |
+|---------|----------|-----------|
+| HTML | Generación directa | Documento autocontenido con CSS oscura, índice navegable |
+| PDF | pdfkit | A4, portada, capítulos con tipografía profesional |
+| DOCX | docx | Word con títulos, párrafos justificados |
+| EPUB | epub-gen | Libro electrónico con índice, capítulos en XHTML |
+| Fountain | Texto plano | Formato de guion cinematográfico |
+
+### Flujo
+1. Backend busca el proyecto por `projectId` + `authorId`
+2. Compila `chapterManager.chapters[].manuscriptContent` (html)
+3. Para PDF/DOCX: extrae texto plano (strip HTML)
+4. Para EPUB: preserva HTML
+5. Stream o buffer → response con headers `Content-Disposition: attachment`
+
+---
+
+## 10. Testing
+
+### Stack
+- **vitest** + **jsdom** (browser API mock)
+- Configuración en `client/vite.config.ts` (bloque `test`)
+- Test files junto al módulo que prueban: `*.test.ts`
+
+### Cobertura actual
+| Archivo | Tests | Objeto |
+|---------|-------|--------|
+| `sanitizeHtml.test.ts` | 13 | `sanitizeRichTextHtml()` — tags permitidos/prohibidos, escaping, caché |
+| `exportMarkdown.test.ts` | 17 | `htmlToMarkdown()` + `generateProjectMarkdown()` — conversión HTML→MD, agrupación capítulos |
+| `api.test.ts` | 7 | `apiFetch()` — headers, token, 401 redirect, custom init |
+
+### Cómo correrlos
 ```bash
-cd client && pnpm install
-cd server && pnpm install
+cd client && pnpm test        # una vez
+cd client && pnpm test:watch  # modo watch
 ```
 
-### 7.3 Ejecución
-**Servidor:**
-```bash
-cd server && pnpm dev
-#Disponible en http://localhost:5000
-```
-
-**Cliente:**
-```bash
-cd client && pnpm dev
-#Disponible en http://localhost:5173
-```
-
-### 7.4 Uso del Canvas
-
-#### Crear nodos
-- Botón "+ Añadir tarjeta" en la barra superior
-- Arrastrar desde un nodo existente al hacer clic en el canvas
-
-#### Editar nodos
-- Click en un nodo para abrir el modal de edición
-- Modificar título, contenido, color y etiquetas
-
-#### Conectar nodos
-- Arrastrar desde el punto de conexión (handle) de un nodo hacia otro
-
-#### Editar conexiones
-- Click en una arista para editarla
-- Añadir etiqueta descriptiva
-
-#### Exportar
-- Botón "P" para exportar el canvas como imagen PNG
-
-### 7.5 Sistema de Versiones
-Los snapshots permiten guardar estados inmutables del proyecto:
-1. Acceder al panel de capítulos
-2. Seleccionar "Guardar Snapshot"
-3. Añadir una descripción
+### apiFetch inyectable
+`api.ts` exporta `setApiAdapters(overrides)` y `resetApiAdapters()` para mockear `fetch`, `getToken`, `setToken` y `redirect` en tests. Ver `api.test.ts`.
 
 ---
 
-## 8. Componentes Clave
+## 11. Import Quirks y TypeScript
 
-### 8.1 ProjectContext
-Proveedor de estado global que maneja:
-- Datos del proyecto actual
-- Sincronización con el servidor
-- Estados de guardado (isSaving, hasUnsavedChanges)
-- CRUD de nodos, aristas, personajes y capítulos
+### Server (`"moduleResolution": "NodeNext"`)
+- Todos los imports relativos requieren extensión `.js`: `from './config/db.js'`
+- Módulos CommonJS sin tipos requieren `.d.ts` declarations
 
-### 8.2 PlotCardNode
-Nodo personalizado de React Flow que muestra:
-- Título de la escena
-- Vista previa del contenido
-- Color de categoría
-- Etiquetas de personajes
-
-### 8.3 CanvasArea
-Componente principal del lienzo que:
-- Gestiona el estado de nodos y aristas
-- Maneja eventos de conexionado
-- Proporciona controls y minimap
-- Exporta a imagen
+### Client (`"verbatimModuleSyntax": true`)
+- Usar `import type` para imports solo de tipos
+- `import { valor }` para valores runtime
+- `"moduleResolution": "bundler"`
 
 ---
 
-## 9. Consideraciones Técnicas
+## 12. Convenciones de Código
 
-### 9.1 Rendimiento
-- Los componentes de nodos usan memoización para grandes volúmenes
-- El viewport se guarda para preservar la posición al recargar
+### Estilo
+- Sin comentarios en el código (salvo componentes públicos)
+- Nombres de archivos en PascalCase para componentes, camelCase para utilidades
+- Props tipadas con interfaces locales en cada componente
 
-### 9.2 Type Safety
-- Interfaces compartidas entre frontend y backend
-- Validación de campos en el servidor (pickProjectUpdateFields)
+### Estado
+- Estado local con `useState`/`useReducer` para UI
+- Estado global via Context API (`ProjectContext`, `AuthContext`)
+- `useCallback` + `useMemo` para optimización
+- `useRef` para timers y valores sincrónicos
 
-### 9.3 Inmutabilidad
-- Snapshots son append-only: nunca se modifican
-- El estado local se sincroniza con el servidor de forma no bloqueante
+### API
+- Cliente usa `apiFetch()` que añade `Authorization` header automáticamente
+- Respuestas envueltas en `{ status: 'success'|'error', data, message, detail }`
+- Códigos: 200 (ok), 201 (creado), 400 (bad request), 401 (no auth), 404 (not found), 500 (error)
 
 ---
 
-## 10. Referencias
+## 13. Referencias
 
-- Documento de Diseño (SDD): `docs/context.md`
-- Canvas: https://reactflow.dev/
-- Estilos: https://tailwindcss.com/
+- [React Flow docs](https://reactflow.dev/)
+- [Tailwind CSS v4](https://tailwindcss.com/)
+- [TipTap Editor](https://tiptap.dev/)
+- [pdfkit](https://pdfkit.org/)
+- [docx](https://docx.js.org/)
+- [epub-gen](https://www.npmjs.com/package/epub-gen)
+- [OpenAI SDK](https://www.npmjs.com/package/openai)

@@ -6,16 +6,28 @@ export interface IGlobalTag {
   color: string;
 }
 
-export interface IUser extends Document {
-  authorId: string; // auth_9921
+export interface IGlobalCharacter {
+  id: string;
   name: string;
+  image?: { url: string; width: number; height: number };
+  biography?: string;
+  appearance?: string;
+  psychology?: string;
+  backstory?: string;
+}
+
+export interface IUser extends Document {
+  authorId: string;
+  name: string;
+  email?: string;
+  password?: string;
   globalSettings: {
     theme: string;
     canvasGrid: boolean;
   };
   authorLibrary: {
     globalTags: IGlobalTag[];
-    globalCharacters: any[]; // Extended later if needed
+    globalCharacters: IGlobalCharacter[];
   };
 }
 
@@ -28,6 +40,8 @@ const GlobalTagSchema = new Schema<IGlobalTag>({
 const UserSchema = new Schema<IUser>({
   authorId: { type: String, required: true, unique: true },
   name: { type: String, required: true },
+  email: { type: String, unique: true, sparse: true },
+  password: { type: String },
   globalSettings: {
     theme: { type: String, default: 'dark' },
     canvasGrid: { type: Boolean, default: true }

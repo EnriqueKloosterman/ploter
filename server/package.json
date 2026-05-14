@@ -7,7 +7,10 @@
   "scripts": {
     "dev": "tsx watch src/app.ts",
     "start": "node dist/app.js",
-    "build": "tsc"
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "keywords": [],
   "author": "",
@@ -15,16 +18,29 @@
   "packageManager": "pnpm@10.32.1",
   "dependencies": {
     "cors": "^2.8.6",
+    "docx": "^9.6.1",
     "dotenv": "^17.4.1",
+    "epub-gen": "^0.1.0",
     "express": "^5.2.1",
-    "mongoose": "^9.4.1"
+    "express-rate-limit": "^8.5.1",
+    "helmet": "^8.1.0",
+    "mongoose": "^9.4.1",
+    "multer": "^2.1.1",
+    "openai": "^6.37.0",
+    "pdfkit": "^0.18.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^3.0.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.1.0",
     "@types/node": "^25.6.0",
+    "@types/pdfkit": "^0.17.6",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
-    "typescript": "^6.0.2"
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.6"
   }
 }

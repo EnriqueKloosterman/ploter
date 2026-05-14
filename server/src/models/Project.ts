@@ -1,18 +1,32 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-// Base Interfaces
 export interface ICharacter {
   id: string;
   name: string;
-  image?: { url: string; width: number; height: number; };
+  image?: { url: string; width: number; height: number };
+  biography?: string;
+  appearance?: string;
+  psychology?: string;
+  backstory?: string;
+}
+
+export interface ICharacterRelation {
+  id: string;
+  sourceId: string;
+  targetId: string;
+  type: 'familia' | 'romance' | 'enemistad' | 'aliado' | 'mentor';
+  label?: string;
+  description?: string;
 }
 
 export interface INodeData {
-  title: string;
-  content: string;
+  title?: string;
+  content?: string;
   color?: string;
-  characterTags?: string[];
   categoryTags?: string[];
+  characterTags?: string[];
+  chapterId?: string;
+  [key: string]: unknown;
 }
 
 export interface INode {
@@ -29,6 +43,7 @@ export interface IEdge {
   sourceHandle?: string;
   targetHandle?: string;
   label?: string;
+  type?: 'normal' | 'causa' | 'conflicto';
 }
 
 export interface IBeat {
@@ -40,6 +55,7 @@ export interface IBeat {
 export interface IChapter {
   chapterId: string;
   beats: IBeat[];
+  manuscriptContent?: string;
 }
 
 export interface IProject extends Document {
@@ -51,6 +67,7 @@ export interface IProject extends Document {
     lastModified: Date;
   };
   characters: ICharacter[];
+  characterRelations: ICharacterRelation[];
   canvas: {
     viewport: { x: number; y: number; zoom: number };
     nodes: INode[];
@@ -58,10 +75,6 @@ export interface IProject extends Document {
   };
   chapterManager: {
     chapters: IChapter[];
-  };
-  trashBin: {
-    nodes: INode[];
-    edges: IEdge[];
   };
 }
 
@@ -73,7 +86,20 @@ const CharacterSchema = new Schema<ICharacter>({
     url: String,
     width: Number,
     height: Number
-  }
+  },
+  biography: { type: String },
+  appearance: { type: String },
+  psychology: { type: String },
+  backstory: { type: String }
+}, { _id: false });
+
+const CharacterRelationSchema = new Schema<ICharacterRelation>({
+  id: { type: String, required: true },
+  sourceId: { type: String, required: true },
+  targetId: { type: String, required: true },
+  type: { type: String, enum: ['familia', 'romance', 'enemistad', 'aliado', 'mentor'] },
+  label: { type: String },
+  description: { type: String }
 }, { _id: false });
 
 const NodeSchema = new Schema<INode>({
@@ -99,7 +125,8 @@ const EdgeSchema = new Schema<IEdge>({
   target: { type: String, required: true },
   sourceHandle: String,
   targetHandle: String,
-  label: String
+  label: String,
+  type: { type: String, enum: ['normal', 'causa', 'conflicto'] }
 }, { _id: false });
 
 const BeatSchema = new Schema<IBeat>({
@@ -110,7 +137,8 @@ const BeatSchema = new Schema<IBeat>({
 
 const ChapterSchema = new Schema<IChapter>({
   chapterId: { type: String, required: true },
-  beats: [BeatSchema]
+  beats: [BeatSchema],
+  manuscriptContent: { type: String }
 }, { _id: false });
 
 const ProjectSchema = new Schema<IProject>({
@@ -122,6 +150,7 @@ const ProjectSchema = new Schema<IProject>({
     lastModified: { type: Date, default: Date.now }
   },
   characters: [CharacterSchema],
+  characterRelations: [CharacterRelationSchema],
   canvas: {
     viewport: {
       x: { type: Number, default: 0 },
@@ -133,10 +162,6 @@ const ProjectSchema = new Schema<IProject>({
   },
   chapterManager: {
     chapters: [ChapterSchema]
-  },
-  trashBin: {
-    nodes: [NodeSchema],
-    edges: [EdgeSchema]
   }
 }, { timestamps: true });
 

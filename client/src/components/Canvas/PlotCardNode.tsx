@@ -2,7 +2,8 @@ import React, { memo } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import type { NodeProps } from '@xyflow/react';
 import type { INodeData } from '../../context/projectTypes';
-import { useProject } from '../../context/useProject';
+import { useProjectData } from '../../context/useProject';
+import { useUser } from '../../context/UserContext';
 import { sanitizeRichTextHtml } from '../../lib/sanitizeHtml';
 
 const getColorAccent = (colorName?: string) => {
@@ -18,7 +19,8 @@ const getColorAccent = (colorName?: string) => {
 };
 
 const PlotCardNode: React.FC<NodeProps> = ({ data, selected }) => {
-  const { project, activeFocusChapterId, activeFilterCharId } = useProject();
+  const { project, activeFocusChapterId, activeFilterCharId } = useProjectData();
+  const { tags } = useUser();
   const nodeData = data as INodeData;
   const accentClass = getColorAccent(nodeData.color);
   const safeTitleHtml = sanitizeRichTextHtml(nodeData.title, 'Untitled Node');
@@ -26,7 +28,8 @@ const PlotCardNode: React.FC<NodeProps> = ({ data, selected }) => {
 
   const isFocused = activeFocusChapterId === null || activeFocusChapterId === nodeData.chapterId;
   const isFiltered = activeFilterCharId !== null && !(nodeData.characterTags || []).includes(activeFilterCharId);
-  const isDimmed = !isFocused || isFiltered;
+  const isSearched = (nodeData as any).dimmed === true;
+  const isDimmed = !isFocused || isFiltered || isSearched;
 
   return (
     <div
@@ -62,10 +65,30 @@ const PlotCardNode: React.FC<NodeProps> = ({ data, selected }) => {
           />
 
           {nodeData.categoryTags && nodeData.categoryTags.length > 0 && (
-            <div className="shrink-0 flex items-center">
-              <span className="px-2 py-0.5 mt-0.5 rounded-full bg-purple-500/20 text-purple-300 text-[10px] font-semibold uppercase tracking-wider border border-purple-500/30">
-                {nodeData.categoryTags[0] === 'gt_1' ? 'Giro' : 'Tag'}
-              </span>
+            <div className="shrink-0 flex flex-wrap gap-1 items-start max-w-[100px]">
+              {nodeData.categoryTags.map((tagId) => {
+                const tag = tags.find((t) => t.tagId === tagId);
+                return tag ? (
+                  <span
+                    key={tagId}
+                    className="px-2 py-0.5 text-[9px] font-semibold rounded-full uppercase tracking-wider border"
+                    style={{
+                      backgroundColor: `${tag.color}30`,
+                      color: tag.color,
+                      borderColor: `${tag.color}50`,
+                    }}
+                  >
+                    {tag.label}
+                  </span>
+                ) : (
+                  <span
+                    key={tagId}
+                    className="px-2 py-0.5 text-[9px] font-semibold rounded-full uppercase tracking-wider border bg-purple-500/20 text-purple-300 border-purple-500/30"
+                  >
+                    {tagId}
+                  </span>
+                );
+              })}
             </div>
           )}
         </div>

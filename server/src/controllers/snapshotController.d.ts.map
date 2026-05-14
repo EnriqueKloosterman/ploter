@@ -1,1 +1,1 @@
-{"version":3,"file":"snapshotController.d.ts","sourceRoot":"","sources":["snapshotController.ts"],"names":[],"mappings":"AAIA,eAAO,MAAM,cAAc,GAAU,KAAK,GAAG,EAAE,KAAK,GAAG,iBAsBtD,CAAC;AAGF,eAAO,MAAM,YAAY,GAAU,KAAK,GAAG,EAAE,KAAK,GAAG,iBAiBpD,CAAC"}
+{"version":3,"file":"snapshotController.d.ts","sourceRoot":"","sources":["snapshotController.ts"],"names":[],"mappings":"AAMA,eAAO,MAAM,cAAc,GAAU,KAAK,GAAG,EAAE,KAAK,GAAG,iBA6BtD,CAAC;AAGF,eAAO,MAAM,eAAe,GAAU,KAAK,GAAG,EAAE,KAAK,GAAG,iBAyBvD,CAAC;AAGF,eAAO,MAAM,YAAY,GAAU,KAAK,GAAG,EAAE,KAAK,GAAG,iBAiBpD,CAAC"}

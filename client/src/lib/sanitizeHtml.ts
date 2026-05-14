@@ -1,5 +1,7 @@
 const ALLOWED_TAGS = new Set(['P', 'BR', 'STRONG', 'EM', 'UL', 'OL', 'LI']);
 
+const cache = new Map<string, string>();
+
 const escapeHtml = (value: string) => value
   .replaceAll('&', '&amp;')
   .replaceAll('<', '&lt;')
@@ -36,13 +38,21 @@ export const sanitizeRichTextHtml = (html?: string, fallback = '') => {
     return fallback;
   }
 
+  const cached = cache.get(html);
+  if (cached !== undefined) {
+    return cached;
+  }
+
   if (typeof window === 'undefined') {
-    return fallback || escapeHtml(html);
+    const result = fallback || escapeHtml(html);
+    cache.set(html, result);
+    return result;
   }
 
   const parser = new DOMParser();
   const document = parser.parseFromString(html, 'text/html');
   const sanitized = Array.from(document.body.childNodes).map(sanitizeNode).join('').trim();
-
-  return sanitized || fallback;
+  const result = sanitized || fallback;
+  cache.set(html, result);
+  return result;
 };

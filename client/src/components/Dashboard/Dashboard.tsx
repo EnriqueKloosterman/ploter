@@ -1,6 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { apiFetch } from '../../lib/api';
+import { useAuth } from '../../context/AuthContext';
+import InputModal from '../ui/InputModal';
+import ConfirmModal from '../ui/ConfirmModal';
+import LanguageSelector from '../ui/LanguageSelector';
 
 interface IProjectMeta {
   metadata: {
@@ -12,9 +17,14 @@ interface IProjectMeta {
 }
 
 const Dashboard: React.FC = () => {
+  const { t } = useTranslation();
   const [projects, setProjects] = useState<IProjectMeta[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
+  const [createPromptOpen, setCreatePromptOpen] = useState(false);
+  const [renameTarget, setRenameTarget] = useState<{ id: string; title: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,16 +39,13 @@ const Dashboard: React.FC = () => {
         setProjects(json.data);
       }
     } catch (error) {
-      console.error('Fallo al obtener proyectos:', error);
+      console.error(t('errors.loadFailed') + ':', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleCreateNew = async () => {
-    const title = prompt('Titulo de tu nueva obra:');
-    if (!title) return;
-
+  const handleCreateNew = useCallback(async (title: string) => {
     try {
       setIsCreating(true);
       const res = await apiFetch('/api/projects', {
@@ -53,16 +60,11 @@ const Dashboard: React.FC = () => {
         navigate(`/project/${newProjId}`);
       }
     } catch {
-      alert('Error al crear historia.');
       setIsCreating(false);
     }
-  };
+  }, [navigate]);
 
-  const handleRenameProject = async (e: React.MouseEvent, projectId: string, currentTitle: string) => {
-    e.stopPropagation();
-    const newTitle = prompt('Nuevo titulo de la obra:', currentTitle);
-    if (!newTitle || newTitle === currentTitle) return;
-
+  const handleRenameProject = useCallback(async (projectId: string, newTitle: string) => {
     try {
       const res = await apiFetch(`/api/projects/${projectId}`, {
         method: 'PUT',
@@ -71,23 +73,20 @@ const Dashboard: React.FC = () => {
       });
       if (res.ok) fetchProjects();
     } catch {
-      alert('No se pudo renombrar el proyecto.');
+      console.error('No se pudo renombrar el proyecto.');
     }
-  };
+  }, []);
 
-  const handleDeleteProject = async (e: React.MouseEvent, projectId: string) => {
-    e.stopPropagation();
-    if (!window.confirm('Seguro que deseas eliminar esta historia? Esta accion es irreversible.')) return;
-
+  const handleDeleteProject = useCallback(async (projectId: string) => {
     try {
       const res = await apiFetch(`/api/projects/${projectId}`, {
         method: 'DELETE'
       });
       if (res.ok) fetchProjects();
     } catch {
-      alert('No se pudo eliminar el proyecto.');
+      console.error('No se pudo eliminar el proyecto.');
     }
-  };
+  }, []);
 
   if (isLoading) {
     return (
@@ -108,14 +107,29 @@ const Dashboard: React.FC = () => {
             </h1>
             <p className="text-slate-400 font-medium">Tu biblioteca de multiversos narrativos</p>
           </div>
-          <button
-            onClick={handleCreateNew}
-            disabled={isCreating}
-            className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all hover:-translate-y-0.5"
-          >
-            <span className="text-xl leading-none">+</span>
-            Tejer Nueva Historia
-          </button>
+          <div className="flex items-center gap-4">
+            <LanguageSelector />
+            {user && (
+              <span className="text-slate-400 text-sm hidden sm:block">
+                {user.name}
+              </span>
+            )}
+            <button
+              onClick={logout}
+              className="text-slate-400 hover:text-red-400 text-sm transition-colors"
+              title={t('auth.logout')}
+            >
+              {t('auth.logout')}
+            </button>
+            <button
+              onClick={() => setCreatePromptOpen(true)}
+              disabled={isCreating}
+              className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all hover:-translate-y-0.5"
+            >
+              <span className="text-xl leading-none">+</span>
+              {t('dashboard.newProject')}
+            </button>
+          </div>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -131,24 +145,30 @@ const Dashboard: React.FC = () => {
                 </h2>
                 <div className="flex gap-3 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
-                    onClick={(e) => handleRenameProject(e, proj.metadata.projectId, proj.metadata.title)}
-                    className="hover:text-blue-400 transition-colors"
-                    title="Renombrar"
-                  >
-                    Editar
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setRenameTarget({ id: proj.metadata.projectId, title: proj.metadata.title });
+                    }}
+className="hover:text-blue-400 transition-colors"
+                      title={t('common.edit')}
+                    >
+                      {t('common.edit')}
                   </button>
                   <button
-                    onClick={(e) => handleDeleteProject(e, proj.metadata.projectId)}
-                    className="hover:text-red-400 transition-colors"
-                    title="Eliminar"
-                  >
-                    Borrar
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteTarget(proj.metadata.projectId);
+                    }}
+className="hover:text-red-400 transition-colors"
+                      title={t('common.delete')}
+                    >
+                      {t('common.delete')}
                   </button>
                 </div>
               </div>
 
               <div className="flex justify-between items-end text-xs font-medium text-slate-500 mt-4">
-                <span>Modif: {new Date(proj.metadata.lastModified).toLocaleDateString()}</span>
+                <span>{t('dashboard.lastModified')}: {new Date(proj.metadata.lastModified).toLocaleDateString()}</span>
                 <span className="bg-slate-900 px-3 py-1.5 rounded-lg text-slate-400 group-hover:bg-emerald-900/50 group-hover:text-emerald-300 transition-colors">Entrar</span>
               </div>
             </div>
@@ -156,12 +176,51 @@ const Dashboard: React.FC = () => {
 
           {projects.length === 0 && (
             <div className="col-span-full py-20 text-center">
-              <p className="text-slate-500 text-lg mb-4">El vacio es absoluto. Aun no has escrito historias.</p>
-              <button onClick={handleCreateNew} className="text-emerald-400 hover:text-emerald-300 font-semibold underline underline-offset-4">Empezar ahora</button>
+              <p className="text-slate-500 text-lg mb-4">{t('dashboard.noProjects')}</p>
+              <button onClick={() => setCreatePromptOpen(true)} className="text-emerald-400 hover:text-emerald-300 font-semibold underline underline-offset-4">{t('dashboard.createFirst')}</button>
             </div>
           )}
         </div>
       </div>
+
+      <InputModal
+        key="create"
+        isOpen={createPromptOpen}
+        title={t('project.title')}
+        placeholder={t('project.untitled')}
+        confirmLabel={t('common.create')}
+        onConfirm={(title) => {
+          setCreatePromptOpen(false);
+          handleCreateNew(title);
+        }}
+        onCancel={() => setCreatePromptOpen(false)}
+      />
+
+      <InputModal
+        key={renameTarget?.id ?? 'none'}
+        isOpen={renameTarget !== null}
+        title={t('dashboard.renameProject')}
+        initialValue={renameTarget?.title || ''}
+        confirmLabel={t('common.edit')}
+        onConfirm={(newTitle) => {
+          if (renameTarget && newTitle !== renameTarget.title) {
+            handleRenameProject(renameTarget.id, newTitle);
+          }
+          setRenameTarget(null);
+        }}
+        onCancel={() => setRenameTarget(null)}
+      />
+
+      <ConfirmModal
+        isOpen={deleteTarget !== null}
+        title={t('dashboard.deleteProject')}
+        message={t('dashboard.deleteConfirm')}
+        onConfirm={() => {
+          if (deleteTarget) handleDeleteProject(deleteTarget);
+          setDeleteTarget(null);
+        }}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 };

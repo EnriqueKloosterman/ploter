@@ -1,14 +1,32 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useReactFlow } from '@xyflow/react';
 import type { Node } from '@xyflow/react';
+import { useTranslation } from 'react-i18next';
 import { useProject } from '../../context/useProject';
 import ConfirmModal from '../ui/ConfirmModal';
 import { sanitizeRichTextHtml } from '../../lib/sanitizeHtml';
+import type { IBeat } from '../../context/projectTypes';
 
 const ChapterPanel: React.FC = () => {
-  const { project, addChapter, updateChapter, removeChapter, activeFocusChapterId, setActiveFocusChapterId } = useProject();
+  const { t } = useTranslation();
+  const { project, addChapter, updateChapter, removeChapter, addBeat, updateBeat, removeBeat, activeFocusChapterId, setActiveFocusChapterId } = useProject();
   const { chapters } = project.chapterManager;
   const { setCenter, getNode, fitView } = useReactFlow();
+
+  const canvasNodes = project.canvas.nodes;
+  const nodesByChapter = useMemo(() => {
+    const map = new Map<string, typeof canvasNodes>();
+    for (const node of canvasNodes) {
+      const chapterId = node.data.chapterId || '';
+      const list = map.get(chapterId);
+      if (list) {
+        list.push(node);
+      } else {
+        map.set(chapterId, [node]);
+      }
+    }
+    return map;
+  }, [canvasNodes]);
 
   const [isAdding, setIsAdding] = useState(false);
   const [newChapterId, setNewChapterId] = useState('');
@@ -17,6 +35,10 @@ const ChapterPanel: React.FC = () => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [openChapters, setOpenChapters] = useState<Record<string, boolean>>({});
   const [isPanelOpen, setIsPanelOpen] = useState(true);
+  const [addingBeat, setAddingBeat] = useState<string | null>(null);
+  const [newBeatDesc, setNewBeatDesc] = useState('');
+  const [editingBeat, setEditingBeat] = useState<{ chapterId: string; beatId: string } | null>(null);
+  const [editBeatDesc, setEditBeatDesc] = useState('');
 
   const toggleChapter = (chapterId: string) => {
     setOpenChapters((prev) => ({
@@ -40,11 +62,13 @@ const ChapterPanel: React.FC = () => {
     setIsAdding(false);
   };
 
-  const handleEditSubmit = (e: React.FormEvent) => {
+  const handleEditSubmit = (e: React.FormEvent | React.FocusEvent) => {
     e.preventDefault();
-    if (editingId && editChapterId.trim() && editingId !== editChapterId.trim()) {
-      if (!chapters.some((chapter) => chapter.chapterId === editChapterId.trim())) {
-        updateChapter(editingId, editChapterId.trim());
+    const currentEditId = editingId;
+    const currentName = editChapterId.trim();
+    if (currentEditId && currentName && currentEditId !== currentName) {
+      if (!chapters.some((chapter) => chapter.chapterId === currentName)) {
+        updateChapter(currentEditId, currentName);
       }
     }
     setEditingId(null);
@@ -86,13 +110,13 @@ const ChapterPanel: React.FC = () => {
       >
         <div className="flex items-center gap-2">
           <span className={`text-slate-400 text-xs transition-transform ${isPanelOpen ? 'rotate-90' : 'rotate-0'}`}>{'>'}</span>
-          <h3 className="text-sm font-semibold text-purple-400 uppercase tracking-widest">Capitulos y Beats</h3>
+          <h3 className="text-sm font-semibold text-purple-400 uppercase tracking-widest">{t('sidebar.chapters')}</h3>
           <span className="text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full">{chapters.length}</span>
         </div>
         <button
           onClick={(e) => { e.stopPropagation(); setIsAdding(!isAdding); setIsPanelOpen(true); }}
           className="text-slate-400 hover:text-white transition-colors bg-slate-700/50 hover:bg-slate-600 rounded-md w-6 h-6 flex items-center justify-center font-bold"
-          title="Anadir capitulo"
+          title={t('chapters.addChapter')}
         >
           {isAdding ? '-' : '+'}
         </button>
@@ -106,7 +130,7 @@ const ChapterPanel: React.FC = () => {
                 type="text"
                 value={newChapterId}
                 onChange={(e) => setNewChapterId(e.target.value)}
-                placeholder="Titulo (Ej. Acto 1)..."
+                placeholder={t('chapters.newChapter') + "..."}
                 className="flex-1 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-purple-500"
                 autoFocus
               />
@@ -118,10 +142,10 @@ const ChapterPanel: React.FC = () => {
 
           <div className="p-3 overflow-y-auto space-y-4 grow custom-scrollbar relative">
             {chapters.length === 0 ? (
-              <p className="text-xs text-slate-500 italic text-center py-4">No hay capitulos asignados aun.</p>
+              <p className="text-xs text-slate-500 italic text-center py-4">{t('chapters.noChapters')}</p>
             ) : (
               chapters.map((chapter) => {
-                const linkedNodes = project.canvas.nodes.filter((node) => node.data.chapterId === chapter.chapterId);
+                const linkedNodes = nodesByChapter.get(chapter.chapterId) || [];
                 const isOpen = isChapterOpen(chapter.chapterId);
 
                 return (
@@ -145,7 +169,7 @@ const ChapterPanel: React.FC = () => {
                           </form>
                         ) : (
                           <>
-                            <span className="text-xs font-bold text-slate-300">Capitulo: </span>
+                            <span className="text-xs font-bold text-slate-300">{t('chapters.chapter')}: </span>
                             <span className="text-sm font-bold text-emerald-300">{chapter.chapterId}</span>
                           </>
                         )}
@@ -154,7 +178,7 @@ const ChapterPanel: React.FC = () => {
                         <button
                           onClick={(e) => { e.stopPropagation(); setEditingId(chapter.chapterId); setEditChapterId(chapter.chapterId); }}
                           className="text-slate-500 hover:text-emerald-400 hover:bg-slate-700 p-1 rounded-sm transition-colors"
-                          title="Editar Titulo"
+                          title={t('common.edit')}
                         >
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -163,12 +187,12 @@ const ChapterPanel: React.FC = () => {
                         <button
                           onClick={(e) => handleFocusChapter(e, chapter.chapterId, linkedNodes)}
                           className={`text-xs p-1 rounded transition-colors ${activeFocusChapterId === chapter.chapterId ? 'text-yellow-400 bg-yellow-400/20' : 'text-slate-500 hover:text-yellow-200 hover:bg-slate-700'}`}
-                          title={activeFocusChapterId === chapter.chapterId ? 'Quitar Foco' : 'Enfocar Acto en el Mapa'}
+                          title={activeFocusChapterId === chapter.chapterId ? t('canvas.removeFocus') : t('canvas.focusChapter')}
                         >
                           O
                         </button>
                         <span className="text-xs font-medium text-slate-500 bg-slate-900 px-2 py-0.5 rounded-full border border-slate-700 ml-1">
-                          {linkedNodes.length} Beats
+                          {linkedNodes.length} {t('chapters.beats')}
                         </span>
                       </div>
                     </div>
@@ -176,7 +200,7 @@ const ChapterPanel: React.FC = () => {
                     <button
                       onClick={(e) => { e.stopPropagation(); setDeleteId(chapter.chapterId); }}
                       className="absolute right-2 top-1.5 text-slate-500 hover:text-red-500 opacity-0 group-hover/item:opacity-100 transition-opacity p-1 z-10"
-                      title="Borrar Capitulo"
+                      title={t('chapters.deleteChapter')}
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -185,29 +209,93 @@ const ChapterPanel: React.FC = () => {
 
                     {isOpen && (
                       <div className="py-2 px-3 space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
-                        {linkedNodes.length === 0 ? (
-                          <p className="text-xs text-slate-500 italic">No tiene tarjetas vinculadas.</p>
-                        ) : (
-                          linkedNodes.map((node) => (
-                            <div key={node.id} className="relative flex items-start pl-4 py-1 group/beat">
-                              <span className="absolute left-0 top-3 block w-2 h-2 rounded-full border-2 border-emerald-500/50 bg-slate-800" />
-                              <div className="border-l-2 border-slate-700/50 absolute left-1 top-4 h-full" style={{ zIndex: 0 }} />
-
-                              <div
-                                onClick={() => handleNavigateToNode(node.id)}
-                                className="flex-1 bg-slate-900/80 border mb-2 border-slate-700/50 px-3 py-2 rounded-r-lg rounded-bl-lg shadow-sm z-10 hover:border-blue-500 hover:bg-slate-800 transition-all cursor-pointer group-hover/beat:translate-x-1"
-                                title="Haz clic para centrar vista en esta escena"
+                        {chapter.beats.map((beat) => (
+                          <div key={beat.id} className="bg-slate-850 border border-slate-700/50 rounded-lg p-2 space-y-1">
+                            <div className="flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-purple-500 shrink-0" />
+                              {editingBeat?.chapterId === chapter.chapterId && editingBeat?.beatId === beat.id ? (
+                                <form
+                                  onSubmit={(e) => { e.preventDefault(); updateBeat(chapter.chapterId, beat.id, { description: editBeatDesc }); setEditingBeat(null); }}
+                                  className="flex-1 flex gap-1"
+                                >
+                                  <input
+                                    type="text"
+                                    value={editBeatDesc}
+                                    onChange={(e) => setEditBeatDesc(e.target.value)}
+                                    className="flex-1 bg-slate-900 border border-slate-600 rounded px-1.5 py-0.5 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                                    autoFocus
+                                    onBlur={() => setEditingBeat(null)}
+                                  />
+                                </form>
+                              ) : (
+                                <span
+                                  className="text-xs text-slate-300 flex-1 cursor-pointer hover:text-white"
+                                  onClick={() => { setEditingBeat({ chapterId: chapter.chapterId, beatId: beat.id }); setEditBeatDesc(beat.description); }}
+                                >
+                                  {beat.description || <span className="text-slate-500 italic">{t('chapters.noDescription')}</span>}
+                                </span>
+                              )}
+                              <button
+                                onClick={() => removeBeat(chapter.chapterId, beat.id)}
+                                className="text-slate-600 hover:text-red-400 text-[10px] p-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity"
+                                title={t('chapters.deleteBeat')}
                               >
-                                <p
-                                  className="text-xs font-semibold text-blue-300 mb-1 leading-tight line-clamp-2"
-                                  dangerouslySetInnerHTML={{ __html: sanitizeRichTextHtml(node.data.title, 'Escena sin titulo') }}
-                                />
-                                <p className="text-[9px] text-slate-500 font-mono">
-                                  ID: {node.id.split('_').pop()}
-                                </p>
-                              </div>
+                                x
+                              </button>
                             </div>
-                          ))
+                            {beat.linkedNodes.length > 0 && (
+                              <div className="flex flex-wrap gap-1 pl-3">
+                                {beat.linkedNodes.map((nodeId) => {
+                                  const n = canvasNodes.find((cn) => cn.id === nodeId);
+                                  return n ? (
+                                    <button
+                                      key={nodeId}
+                                      onClick={() => handleNavigateToNode(nodeId)}
+                                      className="text-[10px] text-blue-300 hover:text-blue-200 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700 hover:border-blue-500 transition-colors"
+                                    >
+                                      {sanitizeRichTextHtml(n.data.title, nodeId.split('_').pop() || '?')}
+                                    </button>
+                                  ) : null;
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+
+                        {addingBeat === chapter.chapterId ? (
+                          <form
+                            onSubmit={(e) => {
+                              e.preventDefault();
+                              if (!newBeatDesc.trim()) return;
+                              const newBeat: IBeat = { id: `beat_${Date.now()}`, description: newBeatDesc.trim(), linkedNodes: [] };
+                              addBeat(chapter.chapterId, newBeat);
+                              setNewBeatDesc('');
+                              setAddingBeat(null);
+                            }}
+                            className="flex gap-1"
+                          >
+                            <input
+                              type="text"
+                              value={newBeatDesc}
+                              onChange={(e) => setNewBeatDesc(e.target.value)}
+                              placeholder={t('chapters.beatDescription') + "..."}
+                              className="flex-1 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                              autoFocus
+                            />
+                            <button type="submit" className="bg-purple-600 hover:bg-purple-500 text-white px-2 py-1 rounded text-xs font-medium">+</button>
+                            <button type="button" onClick={() => { setAddingBeat(null); setNewBeatDesc(''); }} className="text-slate-500 hover:text-white text-xs px-1">x</button>
+                          </form>
+                        ) : (
+                          <button
+                            onClick={() => setAddingBeat(chapter.chapterId)}
+                            className="text-[10px] text-purple-400 hover:text-purple-300 transition-colors w-full text-left px-1"
+                          >
+                            + {t('chapters.addBeat')}
+                          </button>
+                        )}
+
+                        {linkedNodes.length === 0 && chapter.beats.length === 0 && (
+                          <p className="text-xs text-slate-500 italic">{t('chapters.noNodesLinked')}</p>
                         )}
                       </div>
                     )}
@@ -221,8 +309,8 @@ const ChapterPanel: React.FC = () => {
 
       <ConfirmModal
         isOpen={deleteId !== null}
-        title="Eliminar Capitulo"
-        message="Seguro que deseas eliminar este acto o capitulo y su estructura?"
+        title={t('chapters.deleteChapter')}
+        message={t('chapters.deleteConfirm')}
         onConfirm={confirmDeletion}
         onCancel={() => setDeleteId(null)}
       />

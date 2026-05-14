@@ -1,6 +1,6 @@
 import type { IChapter, INode, IProject } from '../../context/projectTypes';
 
-const htmlToMarkdown = (html: string) => {
+export const htmlToMarkdown = (html: string) => {
   if (!html) return '';
 
   let markdown = html;
@@ -14,7 +14,7 @@ const htmlToMarkdown = (html: string) => {
   return markdown.trim();
 };
 
-export const exportProjectToMarkdown = (project: IProject) => {
+export const generateProjectMarkdown = (project: IProject): string => {
   let markdown = `# ${project.metadata?.title || 'Proyecto sin titulo'}\n\n`;
 
   const nodes: INode[] = project.canvas?.nodes || [];
@@ -46,6 +46,12 @@ export const exportProjectToMarkdown = (project: IProject) => {
       markdown += content ? `${content}\n\n` : '*Sin contenido.*\n\n';
     });
   }
+
+  return markdown;
+};
+
+export const exportProjectToMarkdown = (project: IProject) => {
+  const markdown = generateProjectMarkdown(project);
 
   const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
   const url = URL.createObjectURL(blob);

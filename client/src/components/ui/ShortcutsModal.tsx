@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface ShortcutsModalProps {
   isOpen: boolean;
@@ -6,6 +7,16 @@ interface ShortcutsModalProps {
 }
 
 const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
@@ -21,7 +32,7 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose }) => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 className="text-lg font-bold text-slate-100">Guía y Atajos de Teclado</h3>
+            <h3 className="text-lg font-bold text-slate-100">{t('shortcuts.title')}</h3>
           </div>
           <button 
             onClick={onClose}
@@ -35,10 +46,61 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose }) => {
 
         <div className="p-6 space-y-4">
           <div className="space-y-3">
-            
+
             {/* Shortcut Item */}
             <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
-              <span className="text-sm font-medium text-slate-300">Seleccionar varias tarjetas a la vez</span>
+              <span className="text-sm font-medium text-slate-300">{t('shortcuts.saveProject')}</span>
+              <kbd className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-md text-xs font-mono text-emerald-400 shadow-sm">
+                Ctrl + S
+              </kbd>
+            </div>
+
+            {/* Shortcut Item */}
+            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
+              <span className="text-sm font-medium text-slate-300">{t('shortcuts.newCard')}</span>
+              <kbd className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-md text-xs font-mono text-emerald-400 shadow-sm">
+                N
+              </kbd>
+            </div>
+
+            {/* Shortcut Item */}
+            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
+              <span className="text-sm font-medium text-slate-300">{t('shortcuts.newChapter')}</span>
+              <kbd className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-md text-xs font-mono text-purple-400 shadow-sm">
+                C
+              </kbd>
+            </div>
+
+            {/* Shortcut Item */}
+            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
+              <span className="text-sm font-medium text-slate-300">{t('shortcuts.undo')}</span>
+              <kbd className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-md text-xs font-mono text-amber-400 shadow-sm">
+                Ctrl + Z
+              </kbd>
+            </div>
+
+            {/* Shortcut Item */}
+            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
+              <span className="text-sm font-medium text-slate-300">{t('shortcuts.redo')}</span>
+              <kbd className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-md text-xs font-mono text-amber-400 shadow-sm">
+                Ctrl + Shift + Z
+              </kbd>
+            </div>
+
+            {/* Shortcut Item */}
+            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
+              <span className="text-sm font-medium text-slate-300">{t('shortcuts.closeModal')}</span>
+              <kbd className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-md text-xs font-mono text-slate-400 shadow-sm">
+                Escape
+              </kbd>
+            </div>
+
+            {/* Shortcut Item */}
+            <hr className="border-slate-700/50 my-2" />
+
+            {/* Shortcut Item */}
+            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
+              <span className="text-sm font-medium text-slate-300">{t('shortcuts.selectMultiple')}</span>
               <kbd className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-md text-xs font-mono text-emerald-400 shadow-sm">
                 Shift + Arrastrar Mouse
               </kbd>
@@ -46,7 +108,7 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose }) => {
 
             {/* Shortcut Item */}
             <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
-              <span className="text-sm font-medium text-slate-300">Eliminar tarjetas seleccionadas</span>
+              <span className="text-sm font-medium text-slate-300">{t('shortcuts.deleteSelected')}</span>
               <kbd className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-md text-xs font-mono text-red-400 shadow-sm">
                 Retroceso (Del)
               </kbd>
@@ -54,7 +116,7 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose }) => {
 
             {/* Shortcut Item */}
             <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
-              <span className="text-sm font-medium text-slate-300">Unir dos tarjetas con un "Cable"</span>
+              <span className="text-sm font-medium text-slate-300">{t('shortcuts.joinCards')}</span>
               <span className="text-xs text-slate-400 bg-slate-800 px-3 py-1.5 rounded-md border border-slate-700">
                 Arrastrar círculo lateral a otra carta
               </span>
@@ -62,7 +124,7 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose }) => {
 
             {/* Shortcut Item */}
             <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
-              <span className="text-sm font-medium text-slate-300">Paneo y Navegación</span>
+              <span className="text-sm font-medium text-slate-300">{t('shortcuts.panNavigate')}</span>
               <span className="text-xs text-slate-400 bg-slate-800 px-3 py-1.5 rounded-md border border-slate-700">
                 Lazo Izquierdo en el fondo
               </span>
@@ -70,7 +132,7 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose }) => {
 
              {/* Shortcut Item */}
              <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
-              <span className="text-sm font-medium text-slate-300">Saltar o Buscar Capítulo</span>
+              <span className="text-sm font-medium text-slate-300">{t('shortcuts.jumpChapter')}</span>
               <span className="text-xs text-slate-400 bg-slate-800 px-3 py-1.5 rounded-md border border-slate-700">
                 Pulsar icono "👁️" en menú izquierdo
               </span>
@@ -80,7 +142,7 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose }) => {
         </div>
         
         <div className="px-6 py-4 bg-slate-900/80 border-t border-slate-800 text-center">
-          <p className="text-xs text-slate-500 italic">Puedes volver a ver este menú en cualquier momento haciendo clic en el botón superior de "?"</p>
+          <p className="text-xs text-slate-500 italic">{t('shortcuts.tip')}</p>
         </div>
       </div>
     </div>

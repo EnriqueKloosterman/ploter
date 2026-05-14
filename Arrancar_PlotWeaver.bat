@@ -15,4 +15,6 @@ echo.
 echo Los servidores estan corriendo en ventanas de apoyo. 
 echo Cerrando este lanzador principal en 3 segundos...
 timeout /t 3 /nobreak >nul
+echo Abriendo navegador...
+start http://localhost:5173
 exit

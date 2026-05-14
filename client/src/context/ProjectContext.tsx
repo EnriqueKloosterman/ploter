@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { apiFetch } from '../lib/api';
-import { ProjectContext } from './useProject';
-import type { ICharacter, IChapter, IEdge, INode, IProject } from './projectTypes';
+import { ProjectDataContext, ProjectStatusContext } from './useProject';
+import type { IBeat, ICharacter, ICharacterRelation, IChapter, IEdge, INode, IProject } from './projectTypes';
 
 const AUTOSAVE_DELAY_MS = 5000;
+const MAX_UNDO = 50;
 
 const snapshotProject = (project: IProject | null) => (
   project ? JSON.stringify(project) : null
@@ -19,11 +20,17 @@ export const ProjectProvider: React.FC<{ children: ReactNode; projectId: string 
   const [saveError, setSaveError] = useState<string | null>(null);
   const [activeFocusChapterId, setActiveFocusChapterId] = useState<string | null>(null);
   const [activeFilterCharId, setActiveFilterCharId] = useState<string | null>(null);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
 
   const projectRef = useRef<IProject | null>(null);
   const isSavingRef = useRef(false);
   const autosaveTimeoutRef = useRef<number | null>(null);
   const lastSavedSnapshotRef = useRef<string | null>(null);
+  const undoStackRef = useRef<IProject[]>([]);
+  const redoStackRef = useRef<IProject[]>([]);
+  const lastPushedUndoRef = useRef<string | null>(null);
+  const skipUndoRef = useRef(false);
 
   const clearAutosaveTimeout = useCallback(() => {
     if (autosaveTimeoutRef.current !== null) {
@@ -141,28 +148,72 @@ export const ProjectProvider: React.FC<{ children: ReactNode; projectId: string 
     clearAutosaveTimeout();
   }, [clearAutosaveTimeout]);
 
-  const updateNodes = (nodes: INode[]) => {
+  const pushUndo = useCallback(() => {
+    if (skipUndoRef.current) return;
+    const current = projectRef.current;
+    if (!current) return;
+    const snapshot = JSON.stringify(current);
+    if (snapshot === lastPushedUndoRef.current) return;
+    lastPushedUndoRef.current = snapshot;
+
+    undoStackRef.current = [...undoStackRef.current.slice(-(MAX_UNDO - 1)), current];
+    redoStackRef.current = [];
+    setCanUndo(true);
+    setCanRedo(false);
+  }, []);
+
+  const undo = useCallback(() => {
+    const prev = undoStackRef.current.pop();
+    if (!prev) return;
+    const current = projectRef.current;
+    if (current) redoStackRef.current.push(current);
+    skipUndoRef.current = true;
+    setProject(prev);
+    skipUndoRef.current = false;
+    setCanUndo(undoStackRef.current.length > 0);
+    setCanRedo(true);
+    lastPushedUndoRef.current = JSON.stringify(prev);
+  }, [setProject]);
+
+  const redo = useCallback(() => {
+    const next = redoStackRef.current.pop();
+    if (!next) return;
+    const current = projectRef.current;
+    if (current) undoStackRef.current.push(current);
+    skipUndoRef.current = true;
+    setProject(next);
+    skipUndoRef.current = false;
+    setCanRedo(redoStackRef.current.length > 0);
+    setCanUndo(true);
+    lastPushedUndoRef.current = JSON.stringify(next);
+  }, [setProject]);
+
+  const updateNodes = useCallback((nodes: INode[]) => {
+    pushUndo();
     setProject((prev) => prev ? ({
       ...prev,
       canvas: { ...prev.canvas, nodes }
     }) : prev);
-  };
+  }, [pushUndo]);
 
-  const updateEdges = (edges: IEdge[]) => {
+  const updateEdges = useCallback((edges: IEdge[]) => {
+    pushUndo();
     setProject((prev) => prev ? ({
       ...prev,
       canvas: { ...prev.canvas, edges }
     }) : prev);
-  };
+  }, [pushUndo]);
 
-  const addCharacter = (char: ICharacter) => {
+  const addCharacter = useCallback((char: ICharacter) => {
+    pushUndo();
     setProject((prev) => prev ? ({
       ...prev,
       characters: [...prev.characters, char]
     }) : prev);
-  };
+  }, [pushUndo]);
 
-  const addChapter = (chap: IChapter) => {
+  const addChapter = useCallback((chap: IChapter) => {
+    pushUndo();
     setProject((prev) => prev ? ({
       ...prev,
       chapterManager: {
@@ -170,16 +221,18 @@ export const ProjectProvider: React.FC<{ children: ReactNode; projectId: string 
         chapters: [...prev.chapterManager.chapters, chap]
       }
     }) : prev);
-  };
+  }, [pushUndo]);
 
-  const updateCharacter = (charId: string, newName: string) => {
+  const updateCharacter = useCallback((charId: string, updates: Partial<ICharacter>) => {
+    pushUndo();
     setProject((prev) => prev ? ({
       ...prev,
-      characters: prev.characters.map((char) => char.id === charId ? { ...char, name: newName } : char)
+      characters: prev.characters.map((char) => char.id === charId ? { ...char, ...updates } : char)
     }) : prev);
-  };
+  }, [pushUndo]);
 
-  const updateChapter = (oldChapterId: string, newChapterId: string) => {
+  const updateChapter = useCallback((oldChapterId: string, newChapterId: string) => {
+    pushUndo();
     setProject((prev) => {
       if (!prev) return prev;
 
@@ -203,9 +256,10 @@ export const ProjectProvider: React.FC<{ children: ReactNode; projectId: string 
         chapterManager: { ...prev.chapterManager, chapters: updatedChapters }
       };
     });
-  };
+  }, [pushUndo]);
 
-  const removeCharacter = (charId: string) => {
+  const removeCharacter = useCallback((charId: string) => {
+    pushUndo();
     setProject((prev) => {
       if (!prev) return prev;
 
@@ -223,9 +277,110 @@ export const ProjectProvider: React.FC<{ children: ReactNode; projectId: string 
         canvas: { ...prev.canvas, nodes: updatedNodes }
       };
     });
-  };
+  }, [pushUndo]);
 
-  const removeChapter = (chapterId: string) => {
+  const addRelation = useCallback((relation: ICharacterRelation) => {
+    pushUndo();
+    setProject((prev) => prev ? {
+      ...prev,
+      characterRelations: [...(prev.characterRelations || []), relation]
+    } : prev);
+  }, [pushUndo]);
+
+  const updateRelation = useCallback((relationId: string, updates: Partial<ICharacterRelation>) => {
+    pushUndo();
+    setProject((prev) => prev ? {
+      ...prev,
+      characterRelations: (prev.characterRelations || []).map((r) =>
+        r.id === relationId ? { ...r, ...updates } : r
+      )
+    } : prev);
+  }, [pushUndo]);
+
+  const removeRelation = useCallback((relationId: string) => {
+    pushUndo();
+    setProject((prev) => prev ? {
+      ...prev,
+      characterRelations: (prev.characterRelations || []).filter((r) => r.id !== relationId)
+    } : prev);
+  }, [pushUndo]);
+
+  const addBeat = useCallback((chapterId: string, beat: IBeat) => {
+    pushUndo();
+    setProject((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        chapterManager: {
+          ...prev.chapterManager,
+          chapters: prev.chapterManager.chapters.map((ch) =>
+            ch.chapterId === chapterId
+              ? { ...ch, beats: [...ch.beats, beat] }
+              : ch
+          )
+        }
+      };
+    });
+  }, [pushUndo]);
+
+  const updateBeat = useCallback((chapterId: string, beatId: string, updates: Partial<IBeat>) => {
+    pushUndo();
+    setProject((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        chapterManager: {
+          ...prev.chapterManager,
+          chapters: prev.chapterManager.chapters.map((ch) =>
+            ch.chapterId === chapterId
+              ? { ...ch, beats: ch.beats.map((b) => b.id === beatId ? { ...b, ...updates } : b) }
+              : ch
+          )
+        }
+      };
+    });
+  }, [pushUndo]);
+
+  const reorderChapters = useCallback((chapters: IChapter[]) => {
+    pushUndo();
+    setProject((prev) => prev ? {
+      ...prev,
+      chapterManager: { ...prev.chapterManager, chapters }
+    } : prev);
+  }, [pushUndo]);
+
+  const updateChapterManuscript = useCallback((chapterId: string, manuscriptContent: string) => {
+    setProject((prev) => prev ? {
+      ...prev,
+      chapterManager: {
+        ...prev.chapterManager,
+        chapters: prev.chapterManager.chapters.map((ch) =>
+          ch.chapterId === chapterId ? { ...ch, manuscriptContent } : ch
+        )
+      }
+    } : prev);
+  }, []);
+
+  const removeBeat = useCallback((chapterId: string, beatId: string) => {
+    pushUndo();
+    setProject((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        chapterManager: {
+          ...prev.chapterManager,
+          chapters: prev.chapterManager.chapters.map((ch) =>
+            ch.chapterId === chapterId
+              ? { ...ch, beats: ch.beats.filter((b) => b.id !== beatId) }
+              : ch
+          )
+        }
+      };
+    });
+  }, [pushUndo]);
+
+  const removeChapter = useCallback((chapterId: string) => {
+    pushUndo();
     setProject((prev) => {
       if (!prev) return prev;
 
@@ -246,17 +401,33 @@ export const ProjectProvider: React.FC<{ children: ReactNode; projectId: string 
     });
 
     setActiveFocusChapterId((prev) => (prev === chapterId ? null : prev));
-  };
+  }, [pushUndo]);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-slate-900 text-slate-300">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mb-4"></div>
+        <p className="ml-4 font-semibold text-lg tracking-wide">Cargando proyecto...</p>
+      </div>
+    );
+  }
+
+  if (loadError || !project) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-slate-900 text-slate-300 px-6">
+        <div className="max-w-md text-center">
+          <h2 className="text-xl font-semibold text-white mb-3">Proyecto no disponible</h2>
+          <p className="text-slate-400">{loadError || 'No se encontro el proyecto solicitado.'}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <ProjectContext.Provider
+    <ProjectDataContext.Provider
       value={{
-        project: project as IProject,
+        project,
         setProject,
-        isSaving,
-        hasUnsavedChanges,
-        saveError,
-        saveProject,
         activeFocusChapterId,
         setActiveFocusChapterId,
         activeFilterCharId,
@@ -268,24 +439,31 @@ export const ProjectProvider: React.FC<{ children: ReactNode; projectId: string 
         updateCharacter,
         updateChapter,
         removeCharacter,
-        removeChapter
+        addRelation,
+        updateRelation,
+        removeRelation,
+        removeChapter,
+        addBeat,
+        updateBeat,
+        removeBeat,
+        reorderChapters,
+        updateChapterManuscript,
+        undo,
+        redo,
+        canUndo,
+        canRedo
       }}
     >
-      {isLoading ? (
-        <div className="flex h-screen w-full items-center justify-center bg-slate-900 text-slate-300">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mb-4"></div>
-          <p className="ml-4 font-semibold text-lg tracking-wide">Cargando proyecto...</p>
-        </div>
-      ) : loadError || !project ? (
-        <div className="flex h-screen w-full items-center justify-center bg-slate-900 text-slate-300 px-6">
-          <div className="max-w-md text-center">
-            <h2 className="text-xl font-semibold text-white mb-3">Proyecto no disponible</h2>
-            <p className="text-slate-400">{loadError || 'No se encontro el proyecto solicitado.'}</p>
-          </div>
-        </div>
-      ) : (
-        children
-      )}
-    </ProjectContext.Provider>
+      <ProjectStatusContext.Provider
+        value={{
+          isSaving,
+          hasUnsavedChanges,
+          saveError,
+          saveProject
+        }}
+      >
+        {children}
+      </ProjectStatusContext.Provider>
+    </ProjectDataContext.Provider>
   );
 };

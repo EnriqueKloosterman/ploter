@@ -1,1 +1,1 @@
-{"version":3,"file":"snapshotRoutes.d.ts","sourceRoot":"","sources":["snapshotRoutes.ts"],"names":[],"mappings":"AAAA,OAAO,OAAO,MAAM,SAAS,CAAC;AAG9B,QAAA,MAAM,MAAM,EAAE,OAAO,CAAC,MAAyB,CAAC;AAKhD,eAAe,MAAM,CAAC"}
+{"version":3,"file":"snapshotRoutes.d.ts","sourceRoot":"","sources":["snapshotRoutes.ts"],"names":[],"mappings":"AAAA,OAAO,OAAO,MAAM,SAAS,CAAC;AAO9B,QAAA,MAAM,MAAM,EAAE,OAAO,CAAC,MAAyB,CAAC;AAQhD,eAAe,MAAM,CAAC"}

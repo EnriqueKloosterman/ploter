@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import type { Node } from '@xyflow/react';
 import { useReactFlow } from '@xyflow/react';
+import { useTranslation } from 'react-i18next';
 import type { INodeData } from '../../context/projectTypes';
 import { useProject } from '../../context/useProject';
+import { useUser } from '../../context/UserContext';
 import ConfirmModal from '../ui/ConfirmModal';
 import RichTextEditor from '../ui/RichTextEditor';
 
@@ -11,6 +13,7 @@ interface Props {
   onClose: () => void;
   node: Node | null;
   onSave: (nodeId: string, newData: INodeData) => void;
+  onDuplicate?: (node: Node) => void;
 }
 
 const getFormDataFromNode = (node: Node | null): Partial<INodeData> => {
@@ -27,15 +30,26 @@ const getFormDataFromNode = (node: Node | null): Partial<INodeData> => {
   };
 };
 
-const PlotNodeModal: React.FC<Props> = ({ isOpen, onClose, node, onSave }) => {
+const PlotNodeModal: React.FC<Props> = ({ isOpen, onClose, node, onSave, onDuplicate }) => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState<Partial<INodeData>>(() => getFormDataFromNode(node));
   const { project } = useProject();
+  const { tags } = useUser();
   const { deleteElements } = useReactFlow();
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   useEffect(() => {
     setFormData(getFormDataFromNode(node));
   }, [node]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [isOpen, onClose]);
 
   if (!isOpen || !node) return null;
 
@@ -49,7 +63,7 @@ const PlotNodeModal: React.FC<Props> = ({ isOpen, onClose, node, onSave }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity">
       <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         <div className="px-6 py-4 border-b border-white/10 bg-slate-800/50 flex justify-between items-center">
-          <h2 className="text-lg font-bold text-slate-100 font-sans tracking-wide">Editar Tarjeta</h2>
+          <h2 className="text-lg font-bold text-slate-100 font-sans tracking-wide">{t('nodeModal.editCard')}</h2>
           <button
             type="button"
             onClick={onClose}
@@ -61,32 +75,32 @@ const PlotNodeModal: React.FC<Props> = ({ isOpen, onClose, node, onSave }) => {
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Titulo</label>
+            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">{t('nodeModal.title')}</label>
             <div className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 focus-within:ring-2 focus-within:ring-blue-500 transition-all">
               <RichTextEditor
                 key={`title-${node.id}`}
                 content={formData.title || ''}
                 onChange={(newTitle) => setFormData({ ...formData, title: newTitle })}
-                placeholder="Ej. El Descubrimiento"
+                placeholder={t('nodeModal.titlePlaceholder')}
                 minimal={true}
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Descripcion / Contenido</label>
+            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">{t('nodeModal.description')}</label>
             <div className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 focus-within:ring-2 focus-within:ring-blue-500 transition-all">
               <RichTextEditor
                 key={`content-${node.id}`}
                 content={formData.content || ''}
                 onChange={(newContent) => setFormData({ ...formData, content: newContent })}
-                placeholder="Escribe la sinopsis del evento..."
+                placeholder={t('nodeModal.descriptionPlaceholder')}
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Color</label>
+            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">{t('nodeModal.color')}</label>
             <div className="flex gap-3">
               {['slate', 'blue', 'green', 'yellow', 'orange', 'red', 'purple'].map((color) => (
                 <button
@@ -109,10 +123,41 @@ const PlotNodeModal: React.FC<Props> = ({ isOpen, onClose, node, onSave }) => {
             </div>
           </div>
 
+          {tags.length > 0 && (
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">{t('nodeModal.tags')}</label>
+              <div className="flex flex-wrap gap-2">
+                {tags.map((tag) => {
+                  const isSelected = formData.categoryTags?.includes(tag.tagId);
+                  return (
+                    <button
+                      key={tag.tagId}
+                      type="button"
+                      onClick={() => {
+                        const current = formData.categoryTags || [];
+                        const next = isSelected ? current.filter((id) => id !== tag.tagId) : [...current, tag.tagId];
+                        setFormData({ ...formData, categoryTags: next });
+                      }}
+                      className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors flex items-center gap-1.5 ${
+                        isSelected
+                          ? 'bg-opacity-30 border-white/50 text-white'
+                          : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500'
+                      }`}
+                      style={isSelected ? { backgroundColor: `${tag.color}40`, borderColor: tag.color } : undefined}
+                    >
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: tag.color }} />
+                      {tag.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Personajes Vinculados</label>
+            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">{t('nodeModal.linkedCharacters')}</label>
             {project.characters.length === 0 ? (
-              <p className="text-xs text-slate-500 italic">No hay personajes globales dados de alta.</p>
+              <p className="text-xs text-slate-500 italic">{t('nodeModal.noGlobalCharacters')}</p>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {project.characters.map((char) => {
@@ -144,13 +189,13 @@ const PlotNodeModal: React.FC<Props> = ({ isOpen, onClose, node, onSave }) => {
           </div>
 
           <div className="pb-2">
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Acto / Capitulo raiz</label>
+            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">{t('nodeModal.chapterRoot')}</label>
             <select
               value={formData.chapterId || ''}
               onChange={(e) => setFormData({ ...formData, chapterId: e.target.value })}
               className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
             >
-              <option value="">-- No asignado a un Capitulo --</option>
+              <option value="">{t('nodeModal.noChapter')}</option>
               {project.chapterManager.chapters.map((chapter) => (
                 <option key={chapter.chapterId} value={chapter.chapterId}>
                   {chapter.chapterId}
@@ -160,26 +205,37 @@ const PlotNodeModal: React.FC<Props> = ({ isOpen, onClose, node, onSave }) => {
           </div>
 
           <div className="pt-4 mt-2 flex justify-between gap-3 border-t border-slate-800 items-center">
-            <button
-              type="button"
-              onClick={() => setIsConfirmOpen(true)}
-              className="text-red-500 hover:text-red-400 text-xs font-bold uppercase transition-colors px-2 py-1 rounded border border-transparent hover:border-red-500/30"
-            >
-              Borrar Tarjeta
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setIsConfirmOpen(true)}
+                className="text-red-500 hover:text-red-400 text-xs font-bold uppercase transition-colors px-2 py-1 rounded border border-transparent hover:border-red-500/30"
+              >
+                {t('nodeModal.deleteCard')}
+              </button>
+              {onDuplicate && (
+                <button
+                  type="button"
+                  onClick={() => { onDuplicate(node); onClose(); }}
+                  className="text-blue-400 hover:text-blue-300 text-xs font-bold uppercase transition-colors px-2 py-1 rounded border border-transparent hover:border-blue-500/30"
+                >
+                  {t('nodeModal.duplicate')}
+                </button>
+              )}
+            </div>
             <div className="flex gap-3">
               <button
                 type="button"
                 onClick={onClose}
                 className="px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-800 transition-colors"
               >
-                Cancelar
+                {t('nodeModal.cancel')}
               </button>
               <button
                 type="submit"
                 className="px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/30 transition-all font-sans"
               >
-                Aplicar Cambios
+                {t('nodeModal.applyChanges')}
               </button>
             </div>
           </div>
@@ -187,8 +243,8 @@ const PlotNodeModal: React.FC<Props> = ({ isOpen, onClose, node, onSave }) => {
       </div>
       <ConfirmModal
         isOpen={isConfirmOpen}
-        title="Eliminar Tarjeta"
-        message="Seguro que deseas borrar esta tarjeta del lienzo?"
+        title={t('nodeModal.confirmDelete')}
+        message={t('nodeModal.confirmDeleteMessage')}
         onConfirm={() => {
           deleteElements({ nodes: [{ id: node.id }] });
           setIsConfirmOpen(false);
