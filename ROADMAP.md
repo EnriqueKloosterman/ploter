@@ -73,6 +73,16 @@ Mejoras potenciales ordenadas por categoría. Prioridad: 🔴 alta / 🟡 media 
 | Auth JWT | register/login/logout con bcrypt + jsonwebtoken, `authMiddleware`, proyectos por `authorId` |
 | Export (HTML, PDF, DOCX, EPUB, Fountain) | `server/src/controllers/export/`, ExportModal con 5 formatos |
 | AI Assistant (suggestPlot, generateNames, findPlotHoles, summarize) | `server/src/controllers/ai/`, AIPanel con 4 herramientas, soporte OpenAI/LM Studio/Ollama |
+| Timeline / cronología | `TimelineView.tsx` — bloques horizontales por capítulo, drag & drop para reordenar, beats y nodos por capítulo |
+| Editor de manuscrito | `ManuscriptEditor.tsx` — editor TipTap por capítulo, toolbar (H2/H3, bold, italic, list, quote), auto-save, contador palabras, export TXT/HTML |
+| Grafo de relaciones | `CharacterGraphView.tsx` + `CharacterNode.tsx` — canvas con personajes como nodos, aristas (familia/romance/enemistad/aliado/mentor), editor de relaciones |
+
+### PWA / Offline
+| Ítem | Solución |
+|---|---|---|
+| Service worker + manifest | `vite-plugin-pwa`, generateSW, precache assets + NetworkFirst para API calls, auto-update |
+| Meta tags PWA | `theme-color`, `apple-mobile-web-app-capable`, `apple-touch-icon`, `mask-icon`, `viewport-fit=cover` |
+| Iconos | SVG 192x192 y 512x512 basados en el logo existente, con propósito `maskable` |
 
 ### Testing & DX
 | Ítem | Solución |
@@ -129,11 +139,7 @@ Mejoras potenciales ordenadas por categoría. Prioridad: 🔴 alta / 🟡 media 
 ## 📋 Pendientes / Por hacer
 
 | Prioridad | Feature | Descripción | Archivos |
-|---|---|---|---|---|
-| 🟡 | Timeline / cronología | Vista horizontal con capítulos como bloques, arrastrar para reordenar | `client/src/components/Timeline/` |
-| 🟡 | Editor de manuscrito | Editor rich-text por capítulo, contador de palabras, compilar documento | `client/src/components/Manuscript/` |
-| 🟡 | Grafo de relaciones | Segundo canvas con personajes como nodos, aristas (familia/romance/enemistad/aliado/mentor) | `client/src/components/CharacterGraph/` |
-| 🟢 | Modo offline / PWA | Service worker para trabajo sin conexión | `client/vite.config.ts` |
+|---|---|---|---|---|---|
 | 🟢 | CI/CD | GitHub Actions para tests y build | `.github/workflows/` |
 
 ---

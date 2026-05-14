@@ -457,7 +457,96 @@ cd client && pnpm test:watch  # modo watch
 
 ---
 
-## 13. Referencias
+## 13. PWA / Offline
+
+### Stack
+- **`vite-plugin-pwa` v1.3.0** — genera service worker + manifest en build
+- Basado en **Workbox** (Google) con estrategia `generateSW`
+- Sin dependencias adicionales de runtime
+
+### Configuración (`client/vite.config.ts`)
+
+```typescript
+VitePWA({
+  registerType: 'autoUpdate',       // actualiza SW sin preguntar
+  includeAssets: ['favicon.svg', 'icons.svg', 'pwa-192.svg', 'pwa-512.svg'],
+  manifest: { ... },
+  workbox: {
+    globPatterns: ['**/*.{js,css,html,svg,png,ico,json}'],
+    runtimeCaching: [
+      {
+        urlPattern: /^https?:\/\/.*\/api\/.*/i,
+        handler: 'NetworkFirst',
+        options: {
+          cacheName: 'api-cache',
+          expiration: { maxEntries: 100, maxAgeSeconds: 604800 },  // 7 días
+          networkTimeoutSeconds: 5,
+        },
+      },
+    ],
+  },
+})
+```
+
+### Archivos generados en build (`dist/`)
+
+| Archivo | Propósito |
+|---------|-----------|
+| `sw.js` | Service worker (precache + runtime caching) |
+| `workbox-e4022e15.js` | Librería Workbox incluida |
+| `manifest.webmanifest` | Manifest PWA (nombre, iconos, display) |
+| `registerSW.js` | Script de registro del SW (auto-inyectado) |
+
+### Manifest
+
+- `name`: PlotWeaver
+- `short_name`: PlotWeaver
+- `display`: standalone (sin barra de navegación del navegador)
+- `theme_color`: `#0f172a` (slate-900, acorde al fondo de la app)
+- `background_color`: `#0f172a` (pantalla de splash al abrir)
+- Iconos SVG: 192×192 y 512×512 (el último también con propósito `maskable`)
+- `orientation`: portrait-primary
+
+### Service Worker — Estrategia de Caché
+
+| Recurso | Estrategia | Detalle |
+|---------|-----------|---------|
+| JS, CSS, HTML, SVG, PNG, ICO, JSON | **Precache** (instalación) | Se descargan al registrar el SW, servidos desde `CacheStorage` |
+| Llamadas API (`/api/*`) | **NetworkFirst** | Intenta red primero; si falla o timeout (5s), sirve desde caché. Válido por 7 días, máx 100 entradas |
+
+### Meta Tags en `index.html`
+
+```html
+<meta name="theme-color" content="#0f172a" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<link rel="apple-touch-icon" href="/pwa-192.svg" />
+<link rel="mask-icon" href="/pwa-512.svg" color="#863bff" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+```
+
+### Iconos
+
+- `public/pwa-192.svg` — SVG 192×192 basado en `favicon.svg` (logotipo PlotWeaver)
+- `public/pwa-512.svg` — SVG 512×512, mismo diseño escalado
+- `public/favicon.svg` — favicon del sitio (existente)
+
+### Flujo de instalación (usuario)
+
+1. El usuario visita la app en Chrome/Edge/Safari
+2. El `registerSW.js` solicita registrar el service worker
+3. Se precachean los assets estáticos
+4. Aparece el prompt "Add to Home Screen" (o el usuario lo hace manualmente)
+5. Al abrir desde el homescreen, la app se inicia en modo `standalone`
+
+### Actualizaciones
+
+- `registerType: 'autoUpdate'` — cuando se detecta un nuevo SW, se instala automáticamente y se recarga la página
+- No hay prompt de "actualización disponible" — la app siempre corre la última versión
+
+---
+
+## 14. Referencias
 
 - [React Flow docs](https://reactflow.dev/)
 - [Tailwind CSS v4](https://tailwindcss.com/)
