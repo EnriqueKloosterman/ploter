@@ -1,5 +1,9 @@
 # AGENTS.md — PlotWeaver
 
+## ⚠️ Regla crítica
+
+- **NUNCA** instalar dependencias ni modificar `package.json` / `pnpm-lock.yaml` sin preguntar primero y obtener aprobación explícita del usuario.
+
 ## Stack
 
 - Two independent packages: `client/` (React 19 + Vite 8 + Tailwind 4) and `server/` (Express 5 + Mongoose 9).

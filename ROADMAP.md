@@ -34,7 +34,8 @@ Mejoras potenciales ordenadas por categoría. Prioridad: 🔴 alta / 🟡 media 
 
 ### UX
 | Ítem | Solución |
-|---|---|
+|---|---|---|
+| i18n Español/Inglés | `i18next` + `react-i18next`, 160+ keys, toggle global con globe icon, persisted en localStorage |
 | Atajos de teclado | `Ctrl+S` guardar, `Ctrl+Z` undo, `Ctrl+Shift+Z` redo, `Escape` cerrar modal, `N` nueva tarjeta, `C` nuevo capítulo |
 | Undo/redo | History stack (max 50) en `ProjectContext` con `pushUndo()` en cada mutación |
 | Botones Undo/Redo en UI | Botones en barra superior del canvas, `canUndo`/`canRedo` para disabled |
@@ -128,8 +129,7 @@ Mejoras potenciales ordenadas por categoría. Prioridad: 🔴 alta / 🟡 media 
 ## 📋 Pendientes / Por hacer
 
 | Prioridad | Feature | Descripción | Archivos |
-|---|---|---|---|
-| 🔴 | **Selección de idioma** | Toggle Español/Inglés (i18n) en toda la app | `client/src/i18n/` (nuevo), componentes UI |
+|---|---|---|---|---|
 | 🟡 | Timeline / cronología | Vista horizontal con capítulos como bloques, arrastrar para reordenar | `client/src/components/Timeline/` |
 | 🟡 | Editor de manuscrito | Editor rich-text por capítulo, contador de palabras, compilar documento | `client/src/components/Manuscript/` |
 | 🟡 | Grafo de relaciones | Segundo canvas con personajes como nodos, aristas (familia/romance/enemistad/aliado/mentor) | `client/src/components/CharacterGraph/` |

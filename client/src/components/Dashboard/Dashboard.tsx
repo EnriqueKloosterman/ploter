@@ -69,7 +69,7 @@ const Dashboard: React.FC = () => {
       const res = await apiFetch(`/api/projects/${projectId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 'metadata.title': newTitle })
+        body: JSON.stringify({ metadata: { title: newTitle } })
       });
       if (res.ok) fetchProjects();
     } catch {
