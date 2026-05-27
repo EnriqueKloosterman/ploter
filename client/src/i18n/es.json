@@ -28,7 +28,20 @@
     "email": "Correo electrónico",
     "password": "Contraseña",
     "name": "Nombre",
-    "confirmPassword": "Confirmar contraseña"
+    "confirmPassword": "Confirmar contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "forgotPasswordTitle": "Recuperar contraseña",
+    "forgotPasswordDesc": "Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña",
+    "sendResetLink": "Enviar enlace",
+    "sending": "Enviando...",
+    "resetPasswordTitle": "Restablecer contraseña",
+    "newPassword": "Nueva contraseña",
+    "resetPassword": "Restablecer contraseña",
+    "resetting": "Restableciendo...",
+    "resetLinkSent": "Te hemos enviado un enlace de recuperación. Revisa tu correo y la consola del servidor.",
+    "passwordResetSuccess": "Contraseña actualizada correctamente. Redirigiendo al inicio de sesión...",
+    "invalidResetToken": "Enlace inválido o expirado",
+    "backToLogin": "Volver al inicio de sesión"
   },
   "dashboard": {
     "title": "Mis Proyectos",

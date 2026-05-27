@@ -1,5 +1,6 @@
 import type { Response } from 'express';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import User from '../models/User.js';
 import { generateToken } from '../middleware/auth.js';
 import type { AuthRequest } from '../middleware/auth.js';
@@ -96,6 +97,67 @@ export const login = async (req: AuthRequest, res: Response) => {
   } catch (error) {
     console.error('Error logging in:', error);
     res.status(500).json({ status: 'error', message: 'Error al iniciar sesion' });
+  }
+};
+
+export const forgotPassword = async (req: AuthRequest, res: Response) => {
+  try {
+    const { email } = req.body as { email?: string };
+
+    if (!email) {
+      return res.status(400).json({ status: 'error', message: 'Email es requerido' });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.json({ status: 'success', message: 'Si el email existe, recibiras un enlace de recuperacion' });
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = new Date(Date.now() + 3600000); // 1 hour
+    await user.save();
+
+    const resetLink = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password/${token}`;
+    console.log('--- PASSWORD RESET LINK ---');
+    console.log(resetLink);
+    console.log('---------------------------');
+
+    res.json({ status: 'success', message: 'Si el email existe, recibiras un enlace de recuperacion', resetLink });
+  } catch (error) {
+    console.error('Error in forgotPassword:', error);
+    res.status(500).json({ status: 'error', message: 'Error al procesar la solicitud' });
+  }
+};
+
+export const resetPassword = async (req: AuthRequest, res: Response) => {
+  try {
+    const { token } = req.params as { token: string };
+    const { password } = req.body as { password?: string };
+
+    if (!password || password.length < 6) {
+      return res.status(400).json({ status: 'error', message: 'La contrasena debe tener al menos 6 caracteres' });
+    }
+
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: new Date() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ status: 'error', message: 'Enlace invalido o expirado' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    user.password = hashedPassword;
+    delete (user as any).resetPasswordToken;
+    delete (user as any).resetPasswordExpires;
+    await user.save();
+
+    res.json({ status: 'success', message: 'Contrasena actualizada correctamente' });
+  } catch (error) {
+    console.error('Error in resetPassword:', error);
+    res.status(500).json({ status: 'error', message: 'Error al restablecer la contrasena' });
   }
 };
 

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 
 const Login: React.FC = () => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -57,6 +59,12 @@ const Login: React.FC = () => {
               required
               className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
             />
+          </div>
+
+          <div className="text-right -mt-2">
+            <Link to="/forgot-password" className="text-sm text-slate-400 hover:text-emerald-400 transition-colors">
+              {t('auth.forgotPassword')}
+            </Link>
           </div>
 
           {error && (

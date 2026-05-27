@@ -21,6 +21,8 @@ export interface IUser extends Document {
   name: string;
   email?: string;
   password?: string;
+  resetPasswordToken?: string;
+  resetPasswordExpires?: Date;
   globalSettings: {
     theme: string;
     canvasGrid: boolean;
@@ -42,6 +44,8 @@ const UserSchema = new Schema<IUser>({
   name: { type: String, required: true },
   email: { type: String, unique: true, sparse: true },
   password: { type: String },
+  resetPasswordToken: { type: String },
+  resetPasswordExpires: { type: Date },
   globalSettings: {
     theme: { type: String, default: 'dark' },
     canvasGrid: { type: Boolean, default: true }

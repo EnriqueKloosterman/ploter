@@ -11,7 +11,7 @@ const mockUser = {
 };
 
 vi.mock('../src/models/User.js', () => ({
-  default: { findOne: vi.fn(), create: vi.fn(), findById: vi.fn() },
+  default: { findOne: vi.fn(), create: vi.fn(), findById: vi.fn(), updateOne: vi.fn() },
 }));
 
 vi.mock('bcryptjs', () => ({
@@ -27,7 +27,7 @@ vi.mock('../src/middleware/auth.js', () => ({
 
 import User from '../src/models/User.js';
 import bcrypt from 'bcryptjs';
-import { register, login, me } from '../src/controllers/authController.js';
+import { register, login, forgotPassword, resetPassword, me } from '../src/controllers/authController.js';
 
 function mockReq(overrides: Record<string, unknown> = {}) {
   return { body: {}, user: { userId: 'user-id-123', authorId: 'auth_1234', email: 'test@test.com' }, ...overrides } as any;
@@ -129,6 +129,97 @@ describe('login', () => {
     const req = mockReq({ body: { email: 'test@test.com', password: 'pass' } });
     const res = mockRes();
     await login(req, res);
+    expect(res.status).toHaveBeenCalledWith(500);
+  });
+});
+
+describe('forgotPassword', () => {
+  beforeEach(() => { vi.clearAllMocks(); });
+
+  it('returns success and saves token when user exists', async () => {
+    const saveMock = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(User.findOne).mockResolvedValue({ ...mockUser, save: saveMock } as any);
+
+    const req = mockReq({ body: { email: 'test@test.com' } });
+    const res = mockRes();
+    await forgotPassword(req, res);
+
+    expect(saveMock).toHaveBeenCalled();
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      status: 'success',
+      message: expect.any(String),
+      resetLink: expect.stringContaining('/reset-password/'),
+    }));
+  });
+
+  it('returns 400 when email missing', async () => {
+    const req = mockReq({ body: {} });
+    const res = mockRes();
+    await forgotPassword(req, res);
+    expect(res.status).toHaveBeenCalledWith(400);
+  });
+
+  it('does not reveal if email does not exist', async () => {
+    vi.mocked(User.findOne).mockResolvedValue(null);
+    const req = mockReq({ body: { email: 'nonexistent@test.com' } });
+    const res = mockRes();
+    await forgotPassword(req, res);
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      status: 'success',
+      message: expect.any(String),
+    }));
+    expect(res.status).not.toHaveBeenCalledWith(404);
+  });
+
+  it('returns 500 on error', async () => {
+    vi.mocked(User.findOne).mockRejectedValue(new Error('db'));
+    const req = mockReq({ body: { email: 'test@test.com' } });
+    const res = mockRes();
+    await forgotPassword(req, res);
+    expect(res.status).toHaveBeenCalledWith(500);
+  });
+});
+
+describe('resetPassword', () => {
+  beforeEach(() => { vi.clearAllMocks(); });
+
+  it('updates password with valid token', async () => {
+    const saveMock = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(User.findOne).mockResolvedValue({ ...mockUser, save: saveMock } as any);
+    vi.mocked(bcrypt.hash).mockResolvedValue('$2y$10$newhashed' as never);
+
+    const req = mockReq({ params: { token: 'valid-token' }, body: { password: 'newpass123' } });
+    const res = mockRes();
+    await resetPassword(req, res);
+
+    expect(bcrypt.hash).toHaveBeenCalledWith('newpass123', 10);
+    expect(saveMock).toHaveBeenCalled();
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      status: 'success',
+      message: 'Contrasena actualizada correctamente',
+    }));
+  });
+
+  it('returns 400 when password too short', async () => {
+    const req = mockReq({ params: { token: 'token' }, body: { password: '12345' } });
+    const res = mockRes();
+    await resetPassword(req, res);
+    expect(res.status).toHaveBeenCalledWith(400);
+  });
+
+  it('returns 400 when token invalid or expired', async () => {
+    vi.mocked(User.findOne).mockResolvedValue(null);
+    const req = mockReq({ params: { token: 'bad-token' }, body: { password: 'newpass123' } });
+    const res = mockRes();
+    await resetPassword(req, res);
+    expect(res.status).toHaveBeenCalledWith(400);
+  });
+
+  it('returns 500 on error', async () => {
+    vi.mocked(User.findOne).mockRejectedValue(new Error('db'));
+    const req = mockReq({ params: { token: 'token' }, body: { password: 'newpass123' } });
+    const res = mockRes();
+    await resetPassword(req, res);
     expect(res.status).toHaveBeenCalledWith(500);
   });
 });
