@@ -21,6 +21,7 @@ export interface INodeData {
   title?: string;
   content?: string;
   sceneAction?: string;
+  image?: { url: string; width: number; height: number };
   color?: string;
   categoryTags?: string[];
   characterTags?: string[];

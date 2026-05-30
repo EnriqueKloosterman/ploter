@@ -23,6 +23,7 @@ export interface INodeData {
   title?: string;
   content?: string;
   sceneAction?: string;
+  image?: { url: string; width: number; height: number };
   color?: string;
   categoryTags?: string[];
   characterTags?: string[];
@@ -114,6 +115,7 @@ const NodeSchema = new Schema<INode>({
     title: String,
     content: String,
     sceneAction: String,
+    image: { url: String, width: Number, height: Number },
     color: String,
     characterTags: [String],
     categoryTags: [String],

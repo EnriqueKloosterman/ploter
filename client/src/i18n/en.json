@@ -172,6 +172,10 @@
   },
   "nodeModal": {
     "editCard": "Edit Card",
+    "backgroundImage": "Background image",
+    "uploadImage": "Upload image",
+    "pasteUrl": "Paste URL",
+    "removeImage": "Remove image",
     "sceneAction": "Scene action",
     "sceneActionPlaceholder": "Describe the scene action...",
     "title": "Title",

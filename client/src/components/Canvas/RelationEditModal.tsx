@@ -21,14 +21,16 @@ interface RelationEditModalProps {
   isOpen: boolean;
   characters: ICharacter[];
   editingRelation: ICharacterRelation | null;
+  defaultSourceId?: string;
+  defaultTargetId?: string;
   onSave: (relation: { sourceId: string; targetId: string; type: ICharacterRelation['type']; label?: string; description?: string }) => void;
   onDelete: (relationId: string) => void;
   onClose: () => void;
 }
 
-const RelationEditModal: React.FC<RelationEditModalProps> = ({ isOpen, characters, editingRelation, onSave, onDelete, onClose }) => {
-  const [sourceId, setSourceId] = useState(editingRelation?.sourceId || '');
-  const [targetId, setTargetId] = useState(editingRelation?.targetId || '');
+const RelationEditModal: React.FC<RelationEditModalProps> = ({ isOpen, characters, editingRelation, defaultSourceId, defaultTargetId, onSave, onDelete, onClose }) => {
+  const [sourceId, setSourceId] = useState(editingRelation?.sourceId || defaultSourceId || '');
+  const [targetId, setTargetId] = useState(editingRelation?.targetId || defaultTargetId || '');
   const [type, setType] = useState<ICharacterRelation['type']>(editingRelation?.type || 'aliado');
   const [label, setLabel] = useState(editingRelation?.label || '');
   const [description, setDescription] = useState(editingRelation?.description || '');

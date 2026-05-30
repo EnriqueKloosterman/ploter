@@ -172,6 +172,10 @@
   },
   "nodeModal": {
     "editCard": "Editar Tarjeta",
+    "backgroundImage": "Imagen de fondo",
+    "uploadImage": "Subir imagen",
+    "pasteUrl": "Pegar URL",
+    "removeImage": "Quitar imagen",
     "sceneAction": "Acción de escena",
     "sceneActionPlaceholder": "Describe la acción de la escena...",
     "title": "Título",

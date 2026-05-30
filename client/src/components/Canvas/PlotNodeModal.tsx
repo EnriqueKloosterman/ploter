@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { Node } from '@xyflow/react';
 import { useReactFlow } from '@xyflow/react';
 import { useTranslation } from 'react-i18next';
 import type { INodeData } from '../../context/projectTypes';
 import { useProject } from '../../context/useProject';
 import { useUser } from '../../context/UserContext';
+import { uploadImage } from '../../lib/upload';
 import ConfirmModal from '../ui/ConfirmModal';
 import RichTextEditor from '../ui/RichTextEditor';
 
@@ -25,6 +26,7 @@ const getFormDataFromNode = (node: Node | null): Partial<INodeData> => {
     title: nodeData.title || '',
     content: nodeData.content || '',
     sceneAction: nodeData.sceneAction || '',
+    image: nodeData.image || undefined,
     color: nodeData.color || 'slate',
     characterTags: nodeData.characterTags || [],
     chapterId: nodeData.chapterId || ''
@@ -38,6 +40,10 @@ const PlotNodeModal: React.FC<Props> = ({ isOpen, onClose, node, onSave, onDupli
   const { tags } = useUser();
   const { deleteElements } = useReactFlow();
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [urlInput, setUrlInput] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setFormData(getFormDataFromNode(node));
@@ -111,6 +117,102 @@ const PlotNodeModal: React.FC<Props> = ({ isOpen, onClose, node, onSave, onDupli
                 minimal
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">{t('nodeModal.backgroundImage')}</label>
+
+            {formData.image?.url ? (
+              <div className="relative rounded-lg overflow-hidden border border-slate-700/50 bg-slate-950">
+                <img
+                  src={formData.image.url}
+                  alt=""
+                  className="w-full h-24 object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, image: undefined })}
+                  className="absolute top-1 right-1 bg-black/60 hover:bg-black/80 text-white text-xs px-2 py-1 rounded transition-colors"
+                >
+                  {t('nodeModal.removeImage')}
+                </button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg,image/gif,image/webp,image/svg+xml"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (!file.type.startsWith('image/')) {
+                      alert(t('common.imageUploadError'));
+                      return;
+                    }
+                    if (file.size > 5 * 1024 * 1024) {
+                      alert(t('common.imageSizeLimit'));
+                      return;
+                    }
+                    setIsUploading(true);
+                    try {
+                      const url = await uploadImage(file);
+                      setFormData({ ...formData, image: { url, width: 0, height: 0 } });
+                    } catch {
+                      alert('Error al subir la imagen');
+                    } finally {
+                      setIsUploading(false);
+                      if (fileInputRef.current) fileInputRef.current.value = '';
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  disabled={isUploading}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700 transition-colors disabled:opacity-50"
+                >
+                  {isUploading ? '...' : t('nodeModal.uploadImage')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowUrlInput(!showUrlInput)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                    showUrlInput
+                      ? 'bg-blue-600/30 border-blue-500 text-blue-200'
+                      : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
+                  }`}
+                >
+                  {t('nodeModal.pasteUrl')}
+                </button>
+              </div>
+            )}
+
+            {showUrlInput && !formData.image?.url && (
+              <div className="mt-2 flex gap-2">
+                <input
+                  type="text"
+                  value={urlInput}
+                  onChange={(e) => setUrlInput(e.target.value)}
+                  placeholder="https://..."
+                  className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (urlInput.trim()) {
+                      setFormData({ ...formData, image: { url: urlInput.trim(), width: 0, height: 0 } });
+                      setUrlInput('');
+                      setShowUrlInput(false);
+                    }
+                  }}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-600 hover:bg-blue-500 text-white transition-colors"
+                >
+                  {t('common.accept')}
+                </button>
+              </div>
+            )}
           </div>
 
           <div>

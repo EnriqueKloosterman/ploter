@@ -60,7 +60,19 @@ const PlotCardNode: React.FC<NodeProps> = ({ data, selected }) => {
 
       <div className={`h-1.5 w-full ${accentClass}`}></div>
 
-      <div className="p-4 flex flex-col gap-3">
+      {nodeData.image?.url && (
+        <>
+          <img
+            src={nodeData.image.url}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover opacity-20 pointer-events-none select-none"
+            draggable={false}
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-900/60 via-slate-900/40 to-slate-900/60 pointer-events-none" />
+        </>
+      )}
+
+      <div className="p-4 flex flex-col gap-3 relative">
         <div className="flex justify-between items-start gap-2">
           <h3
             className="text-slate-100 font-bold text-sm tracking-wide leading-tight line-clamp-2"
