@@ -172,6 +172,8 @@
   },
   "nodeModal": {
     "editCard": "Edit Card",
+    "sceneAction": "Scene action",
+    "sceneActionPlaceholder": "Describe the scene action...",
     "title": "Title",
     "titlePlaceholder": "e.g. The Discovery",
     "description": "Description / Content",

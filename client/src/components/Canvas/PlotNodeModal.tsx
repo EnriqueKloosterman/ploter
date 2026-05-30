@@ -24,6 +24,7 @@ const getFormDataFromNode = (node: Node | null): Partial<INodeData> => {
   return {
     title: nodeData.title || '',
     content: nodeData.content || '',
+    sceneAction: nodeData.sceneAction || '',
     color: nodeData.color || 'slate',
     characterTags: nodeData.characterTags || [],
     chapterId: nodeData.chapterId || ''
@@ -95,6 +96,19 @@ const PlotNodeModal: React.FC<Props> = ({ isOpen, onClose, node, onSave, onDupli
                 content={formData.content || ''}
                 onChange={(newContent) => setFormData({ ...formData, content: newContent })}
                 placeholder={t('nodeModal.descriptionPlaceholder')}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">{t('nodeModal.sceneAction')}</label>
+            <div className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 focus-within:ring-2 focus-within:ring-blue-500 transition-all">
+              <RichTextEditor
+                key={`action-${node.id}`}
+                content={formData.sceneAction || ''}
+                onChange={(newAction) => setFormData({ ...formData, sceneAction: newAction })}
+                placeholder={t('nodeModal.sceneActionPlaceholder')}
+                minimal
               />
             </div>
           </div>

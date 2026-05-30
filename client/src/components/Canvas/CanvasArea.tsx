@@ -168,8 +168,8 @@ const CanvasAreaInner: React.FC = () => {
     setSearchQuery('');
     const newNodeId = `node_${Date.now()}`;
     const newNodeData: INodeData = {
-      title: 'Nueva Escena',
-      content: 'Escribe los eventos aqui...',
+      title: '',
+      content: '',
       color: 'slate',
       characterTags: [],
       chapterId: ''

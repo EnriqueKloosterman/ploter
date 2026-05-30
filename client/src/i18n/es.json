@@ -172,6 +172,8 @@
   },
   "nodeModal": {
     "editCard": "Editar Tarjeta",
+    "sceneAction": "Acción de escena",
+    "sceneActionPlaceholder": "Describe la acción de la escena...",
     "title": "Título",
     "titlePlaceholder": "Ej. El Descubrimiento",
     "description": "Descripción / Contenido",

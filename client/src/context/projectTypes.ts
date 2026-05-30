@@ -20,6 +20,7 @@ export interface ICharacterRelation {
 export interface INodeData {
   title?: string;
   content?: string;
+  sceneAction?: string;
   color?: string;
   categoryTags?: string[];
   characterTags?: string[];

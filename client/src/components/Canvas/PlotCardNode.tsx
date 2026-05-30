@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useState } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import type { NodeProps } from '@xyflow/react';
 import type { INodeData } from '../../context/projectTypes';
@@ -25,6 +25,9 @@ const PlotCardNode: React.FC<NodeProps> = ({ data, selected }) => {
   const accentClass = getColorAccent(nodeData.color);
   const safeTitleHtml = sanitizeRichTextHtml(nodeData.title, 'Untitled Node');
   const safeContentHtml = sanitizeRichTextHtml(nodeData.content, 'Sin descripcion pautada aun para esta trama.');
+  const safeSceneActionHtml = sanitizeRichTextHtml(nodeData.sceneAction);
+
+  const [expanded, setExpanded] = useState(false);
 
   const isFocused = activeFocusChapterId === null || activeFocusChapterId === nodeData.chapterId;
   const isFiltered = activeFilterCharId !== null && !(nodeData.characterTags || []).includes(activeFilterCharId);
@@ -114,6 +117,27 @@ const PlotCardNode: React.FC<NodeProps> = ({ data, selected }) => {
             })}
           </div>
         )}
+
+        <div className="pt-2 mt-1 border-t border-slate-700/50">
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+            className="flex items-center gap-1.5 w-full text-left text-[10px] font-semibold uppercase tracking-wider text-slate-500 hover:text-slate-300 transition-colors"
+          >
+            <span className={`transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`}>▶</span>
+            Acción de escena
+            {!expanded && safeSceneActionHtml.length > 0 && (
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)] shrink-0" />
+            )}
+          </button>
+
+          {expanded && nodeData.sceneAction && nodeData.sceneAction !== '<p></p>' && (
+            <div
+              className="mt-1.5 text-[11px] text-slate-400 leading-relaxed italic max-h-40 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-1 duration-150"
+              dangerouslySetInnerHTML={{ __html: safeSceneActionHtml }}
+            />
+          )}
+        </div>
       </div>
 
       <Handle

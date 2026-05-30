@@ -22,6 +22,7 @@ export interface ICharacterRelation {
 export interface INodeData {
   title?: string;
   content?: string;
+  sceneAction?: string;
   color?: string;
   categoryTags?: string[];
   characterTags?: string[];
@@ -112,6 +113,7 @@ const NodeSchema = new Schema<INode>({
   data: {
     title: String,
     content: String,
+    sceneAction: String,
     color: String,
     characterTags: [String],
     categoryTags: [String],
