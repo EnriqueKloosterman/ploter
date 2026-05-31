@@ -25,6 +25,8 @@ import ManuscriptEditor from './ManuscriptEditor';
 import CharacterGraphView from './CharacterGraphView';
 import AIPanel from './AIPanel';
 import ExportModal from './ExportModal';
+import StoryBibleView from './StoryBibleView';
+import StoryFlowView from './StoryFlowView';
 
 const nodeTypes = {
   plot_card: PlotCardNode
@@ -69,6 +71,8 @@ const CanvasAreaInner: React.FC = () => {
   const [showCharGraph, setShowCharGraph] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showAiPanel, setShowAiPanel] = useState(false);
+  const [showStoryBible, setShowStoryBible] = useState(false);
+  const [showStoryFlow, setShowStoryFlow] = useState(false);
   const { screenToFlowPosition, setCenter } = useReactFlow();
 
   const flowContainerRef = useRef<HTMLDivElement>(null);
@@ -357,7 +361,7 @@ const CanvasAreaInner: React.FC = () => {
         </div>
 
         <button
-          onClick={() => { setShowTimeline(false); setShowManuscript(false); setShowCharGraph(false); setShowAiPanel(false); setShowOutline((v) => !v); }}
+          onClick={() => { setShowTimeline(false); setShowManuscript(false); setShowCharGraph(false); setShowAiPanel(false); setShowStoryBible(false); setShowStoryFlow(false); setShowOutline((v) => !v); }}
           className={`w-9 h-9 flex items-center justify-center rounded-lg border shadow-lg backdrop-blur-sm transition-all hover:scale-105 text-xs ${
             showOutline
               ? 'bg-blue-600/80 text-white border-blue-500/50'
@@ -370,7 +374,7 @@ const CanvasAreaInner: React.FC = () => {
           </svg>
         </button>
         <button
-          onClick={() => { setShowOutline(false); setShowManuscript(false); setShowCharGraph(false); setShowAiPanel(false); setShowTimeline((v) => !v); }}
+          onClick={() => { setShowOutline(false); setShowManuscript(false); setShowCharGraph(false); setShowAiPanel(false); setShowStoryBible(false); setShowStoryFlow(false); setShowTimeline((v) => !v); }}
           className={`w-9 h-9 flex items-center justify-center rounded-lg border shadow-lg backdrop-blur-sm transition-all hover:scale-105 text-xs ${
             showTimeline
               ? 'bg-emerald-600/80 text-white border-emerald-500/50'
@@ -383,7 +387,7 @@ const CanvasAreaInner: React.FC = () => {
           </svg>
         </button>
         <button
-          onClick={() => { setShowOutline(false); setShowTimeline(false); setShowCharGraph(false); setShowAiPanel(false); setShowManuscript((v) => !v); }}
+          onClick={() => { setShowOutline(false); setShowTimeline(false); setShowCharGraph(false); setShowAiPanel(false); setShowStoryBible(false); setShowStoryFlow(false); setShowManuscript((v) => !v); }}
           className={`w-9 h-9 flex items-center justify-center rounded-lg border shadow-lg backdrop-blur-sm transition-all hover:scale-105 text-xs ${
             showManuscript
               ? 'bg-purple-600/80 text-white border-purple-500/50'
@@ -393,6 +397,32 @@ const CanvasAreaInner: React.FC = () => {
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </button>
+        <button
+          onClick={() => { setShowOutline(false); setShowTimeline(false); setShowManuscript(false); setShowCharGraph(false); setShowAiPanel(false); setShowStoryFlow(false); setShowStoryBible((v) => !v); }}
+          className={`w-9 h-9 flex items-center justify-center rounded-lg border shadow-lg backdrop-blur-sm transition-all hover:scale-105 text-xs ${
+            showStoryBible
+              ? 'bg-amber-600/80 text-white border-amber-500/50'
+              : 'bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white border-slate-700/50'
+          }`}
+          title={showStoryBible ? 'Volver al grafo' : 'Story Bible'}
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          </svg>
+        </button>
+        <button
+          onClick={() => { setShowOutline(false); setShowTimeline(false); setShowManuscript(false); setShowCharGraph(false); setShowAiPanel(false); setShowStoryBible(false); setShowStoryFlow((v) => !v); }}
+          className={`w-9 h-9 flex items-center justify-center rounded-lg border shadow-lg backdrop-blur-sm transition-all hover:scale-105 text-xs ${
+            showStoryFlow
+              ? 'bg-indigo-600/80 text-white border-indigo-500/50'
+              : 'bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white border-slate-700/50'
+          }`}
+          title={showStoryFlow ? 'Volver al grafo' : 'Story Flow'}
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
         </button>
         <button
@@ -506,6 +536,10 @@ const CanvasAreaInner: React.FC = () => {
         <TimelineView />
       ) : showOutline ? (
         <OutlineView />
+      ) : showStoryBible ? (
+        <StoryBibleView />
+      ) : showStoryFlow ? (
+        <StoryFlowView />
       ) : (
         <>
           <ReactFlow

@@ -245,6 +245,7 @@ const CharacterPanel: React.FC = () => {
                       <textarea value={char.appearance || ''} onChange={(e) => updateCharacter(char.id, { appearance: e.target.value })} placeholder="Apariencia..." rows={2} className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-[10px] text-slate-300 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none" />
                       <textarea value={char.psychology || ''} onChange={(e) => updateCharacter(char.id, { psychology: e.target.value })} placeholder="Psicologia..." rows={2} className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-[10px] text-slate-300 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none" />
                       <textarea value={char.backstory || ''} onChange={(e) => updateCharacter(char.id, { backstory: e.target.value })} placeholder="Historia previa..." rows={2} className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-[10px] text-slate-300 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none" />
+                      <textarea value={char.stats || ''} onChange={(e) => updateCharacter(char.id, { stats: e.target.value })} placeholder="Estadisticas..." rows={3} className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-[10px] text-slate-300 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none" />
                     </div>
                   )}
                 </div>

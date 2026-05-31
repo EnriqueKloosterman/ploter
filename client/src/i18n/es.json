@@ -116,6 +116,8 @@
     "appearance": "Apariencia",
     "psychology": "Psicología",
     "backstory": "Trasfondo",
+    "stats": "Estadísticas",
+    "statsPlaceholder": "HP: 100\nMP: 50\nNivel: 1\n...",
     "addImage": "Añadir imagen"
   },
   "tags": {
@@ -178,6 +180,8 @@
     "removeImage": "Quitar imagen",
     "sceneAction": "Acción de escena",
     "sceneActionPlaceholder": "Describe la acción de la escena...",
+    "stats": "Stats",
+    "statsPlaceholder": "HP: 100\nPM: 50\nNivel: 1\n...",
     "title": "Título",
     "titlePlaceholder": "Ej. El Descubrimiento",
     "description": "Descripción / Contenido",
@@ -226,7 +230,32 @@
     "title": "Exportar manuscrito",
     "noContentWarning": "No hay contenido de manuscrito en ningún capítulo. El archivo se generará con secciones vacías.",
     "exporting": "Exportando...",
-    "includesAll": "El manuscrito incluye todos los capítulos con su contenido actual."
+    "includesAll": "El manuscrito incluye todos los capítulos con su contenido actual.",
+    "printCards": "Imprimir Tarjetas",
+    "printCardsDesc": "Vista imprimible con todas las tarjetas (3×3 por página)"
+  },
+  "printableCards": {
+    "title": "Tarjetas Imprimibles",
+    "description": "Todas las tarjetas listas para imprimir",
+    "cards": "tarjetas",
+    "print": "Imprimir",
+    "close": "Cerrar"
+  },
+  "storyBible": {
+    "title": "Story Bible",
+    "subtitle": "Referencia completa del proyecto",
+    "projectInfo": "Información del Proyecto",
+    "created": "Creado",
+    "lastModified": "Última modificación",
+    "characters": "Personajes",
+    "noCharacters": "Sin personajes aún",
+    "chapters": "Capítulos",
+    "noChapters": "Sin capítulos aún"
+  },
+  "storyFlow": {
+    "title": "Story Flow",
+    "noNodes": "No hay tarjetas aún. Crea algunas en el canvas.",
+    "chapter": "Capítulo"
   },
   "aiPanel": {
     "title": "Asistente IA",

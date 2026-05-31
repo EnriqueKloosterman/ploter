@@ -28,6 +28,9 @@ const PlotCardNode: React.FC<NodeProps> = ({ data, selected }) => {
   const safeSceneActionHtml = sanitizeRichTextHtml(nodeData.sceneAction);
 
   const [expanded, setExpanded] = useState(false);
+  const [expandedStats, setExpandedStats] = useState(false);
+
+  const hasStats = !!nodeData.stats && nodeData.stats.trim().length > 0;
 
   const isFocused = activeFocusChapterId === null || activeFocusChapterId === nodeData.chapterId;
   const isFiltered = activeFilterCharId !== null && !(nodeData.characterTags || []).includes(activeFilterCharId);
@@ -150,6 +153,28 @@ const PlotCardNode: React.FC<NodeProps> = ({ data, selected }) => {
             />
           )}
         </div>
+
+        {hasStats && (
+          <div className="pt-2 mt-1 border-t border-slate-700/50">
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setExpandedStats(!expandedStats); }}
+              className="flex items-center gap-1.5 w-full text-left text-[10px] font-semibold uppercase tracking-wider text-slate-500 hover:text-slate-300 transition-colors"
+            >
+              <span className={`transition-transform duration-200 ${expandedStats ? 'rotate-90' : ''}`}>▶</span>
+              Stats
+              {!expandedStats && (
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)] shrink-0" />
+              )}
+            </button>
+
+            {expandedStats && (
+              <pre className="mt-1.5 text-[11px] text-slate-400 leading-relaxed whitespace-pre-wrap font-sans max-h-28 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-1 duration-150">
+                {nodeData.stats}
+              </pre>
+            )}
+          </div>
+        )}
       </div>
 
       <Handle

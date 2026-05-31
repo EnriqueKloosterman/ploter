@@ -116,6 +116,8 @@
     "appearance": "Appearance",
     "psychology": "Psychology",
     "backstory": "Backstory",
+    "stats": "Stats",
+    "statsPlaceholder": "HP: 100\nMP: 50\nLevel: 1\n...",
     "addImage": "Add image"
   },
   "tags": {
@@ -178,6 +180,8 @@
     "removeImage": "Remove image",
     "sceneAction": "Scene action",
     "sceneActionPlaceholder": "Describe the scene action...",
+    "stats": "Stats",
+    "statsPlaceholder": "HP: 100\nMP: 50\nLevel: 1\n...",
     "title": "Title",
     "titlePlaceholder": "e.g. The Discovery",
     "description": "Description / Content",
@@ -226,7 +230,32 @@
     "title": "Export manuscript",
     "noContentWarning": "No manuscript content in any chapter. The file will be generated with empty sections.",
     "exporting": "Exporting...",
-    "includesAll": "The manuscript includes all chapters with their current content."
+    "includesAll": "The manuscript includes all chapters with their current content.",
+    "printCards": "Print Cards",
+    "printCardsDesc": "Print-friendly layout with all plot cards (3×3 per page)"
+  },
+  "printableCards": {
+    "title": "Printable Cards",
+    "description": "All plot cards ready for printing",
+    "cards": "cards",
+    "print": "Print",
+    "close": "Close"
+  },
+  "storyBible": {
+    "title": "Story Bible",
+    "subtitle": "Complete project reference",
+    "projectInfo": "Project Information",
+    "created": "Created",
+    "lastModified": "Last modified",
+    "characters": "Characters",
+    "noCharacters": "No characters yet",
+    "chapters": "Chapters",
+    "noChapters": "No chapters yet"
+  },
+  "storyFlow": {
+    "title": "Story Flow",
+    "noNodes": "No plot cards yet. Create some on the canvas.",
+    "chapter": "Chapter"
   },
   "aiPanel": {
     "title": "AI Assistant",

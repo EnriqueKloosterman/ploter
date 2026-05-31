@@ -26,6 +26,7 @@ const getFormDataFromNode = (node: Node | null): Partial<INodeData> => {
     title: nodeData.title || '',
     content: nodeData.content || '',
     sceneAction: nodeData.sceneAction || '',
+    stats: nodeData.stats || '',
     image: nodeData.image || undefined,
     color: nodeData.color || 'slate',
     characterTags: nodeData.characterTags || [],
@@ -117,6 +118,18 @@ const PlotNodeModal: React.FC<Props> = ({ isOpen, onClose, node, onSave, onDupli
                 minimal
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">{t('nodeModal.stats')}</label>
+            <textarea
+              key={`stats-${node.id}`}
+              value={formData.stats || ''}
+              onChange={(e) => setFormData({ ...formData, stats: e.target.value })}
+              placeholder={t('nodeModal.statsPlaceholder')}
+              rows={3}
+              className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all resize-y font-mono"
+            />
           </div>
 
           <div>

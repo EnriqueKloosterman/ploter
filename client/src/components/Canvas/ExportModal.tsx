@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useProject } from '../../context/useProject';
 import { apiUrl } from '../../lib/api';
+import PrintableCardsModal from './PrintableCardsModal';
 
 interface ExportModalProps {
   isOpen: boolean;
@@ -29,6 +30,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
   const { t } = useTranslation();
   const { project } = useProject();
   const [exporting, setExporting] = useState<string | null>(null);
+  const [showPrintCards, setShowPrintCards] = useState(false);
 
   const handleExport = useCallback(async (fmt: ExportFormat) => {
     if (!project) return;
@@ -97,9 +99,28 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
           ))}
         </div>
 
+        <div className="px-4 pt-2">
+          <div className="border-t border-slate-700/30" />
+        </div>
+
+        <div className="px-4 pb-1">
+          <button
+            onClick={() => setShowPrintCards(true)}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all bg-slate-700/30 hover:bg-slate-700/60 border border-slate-700/30 hover:border-slate-600/50"
+          >
+            <span className="text-xl shrink-0">🖨️</span>
+            <div className="flex-1 min-w-0">
+              <span className="text-sm font-semibold text-slate-200">{t('exportModal.printCards')}</span>
+              <span className="text-[11px] text-slate-500 block truncate">{t('exportModal.printCardsDesc')}</span>
+            </div>
+          </button>
+        </div>
+
         <div className="px-4 pb-3 text-[10px] text-slate-600 text-center">
           {t('exportModal.includesAll')}
         </div>
+
+        <PrintableCardsModal isOpen={showPrintCards} onClose={() => setShowPrintCards(false)} />
       </div>
     </div>
   );

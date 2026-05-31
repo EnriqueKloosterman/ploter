@@ -8,6 +8,7 @@ export interface ICharacter {
   appearance?: string;
   psychology?: string;
   backstory?: string;
+  stats?: string;
 }
 
 export interface ICharacterRelation {
@@ -23,6 +24,7 @@ export interface INodeData {
   title?: string;
   content?: string;
   sceneAction?: string;
+  stats?: string;
   image?: { url: string; width: number; height: number };
   color?: string;
   categoryTags?: string[];
@@ -92,7 +94,8 @@ const CharacterSchema = new Schema<ICharacter>({
   biography: { type: String },
   appearance: { type: String },
   psychology: { type: String },
-  backstory: { type: String }
+  backstory: { type: String },
+  stats: { type: String }
 }, { _id: false });
 
 const CharacterRelationSchema = new Schema<ICharacterRelation>({
@@ -115,6 +118,7 @@ const NodeSchema = new Schema<INode>({
     title: String,
     content: String,
     sceneAction: String,
+    stats: String,
     image: { url: String, width: Number, height: Number },
     color: String,
     characterTags: [String],

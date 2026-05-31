@@ -6,6 +6,7 @@ export interface ICharacter {
   appearance?: string;
   psychology?: string;
   backstory?: string;
+  stats?: string;
 }
 
 export interface ICharacterRelation {
@@ -21,6 +22,7 @@ export interface INodeData {
   title?: string;
   content?: string;
   sceneAction?: string;
+  stats?: string;
   image?: { url: string; width: number; height: number };
   color?: string;
   categoryTags?: string[];
