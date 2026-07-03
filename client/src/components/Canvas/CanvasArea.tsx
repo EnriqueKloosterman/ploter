@@ -94,11 +94,16 @@ const CanvasAreaInner: React.FC = () => {
   }, [nodes, searchQuery]);
   const [edges, setEdges, onEdgesChange] = useEdgesState(toFlowEdges(project.canvas.edges));
   const nodesRef = useRef(nodes);
+  const edgesRef = useRef(edges);
   const lastProjectRef = useRef('');
 
   useEffect(() => {
     nodesRef.current = nodes;
   }, [nodes]);
+
+  useEffect(() => {
+    edgesRef.current = edges;
+  }, [edges]);
 
   useEffect(() => {
     const projectSnapshot = JSON.stringify(project.canvas);
@@ -266,62 +271,30 @@ const CanvasAreaInner: React.FC = () => {
   }, [saveProject, undo, redo, canUndo, canRedo, handleAddNode, handleAddChapter, isModalOpen, editingEdge]);
 
   const onNodesDelete = useCallback((deleted: Node[]) => {
-    const deletedIds = deleted.map((node) => node.id);
-    const remaining = nodes.filter((node) => !deletedIds.includes(node.id));
-    updateNodes(toProjectNodes(remaining));
-  }, [nodes, updateNodes]);
+    const deletedIds = new Set(deleted.map((node) => node.id));
+    const remainingNodes = nodesRef.current.filter((node) => !deletedIds.has(node.id));
+    updateNodes(toProjectNodes(remainingNodes));
+
+    const remainingEdges = edgesRef.current.filter(
+      (edge) => !deletedIds.has(edge.source) && !deletedIds.has(edge.target)
+    );
+    if (remainingEdges.length !== edgesRef.current.length) {
+      updateEdges(toProjectEdges(remainingEdges));
+    }
+  }, [updateNodes, updateEdges]);
 
   const onEdgesDelete = useCallback((deleted: Edge[]) => {
-    const deletedIds = deleted.map((edge) => edge.id);
-    const remaining = edges.filter((edge) => !deletedIds.includes(edge.id));
-    updateEdges(toProjectEdges(remaining));
-  }, [edges, updateEdges]);
+    const deletedIds = new Set(deleted.map((edge) => edge.id));
+    const currentEdges = edgesRef.current;
+    const remaining = currentEdges.filter((edge) => !deletedIds.has(edge.id));
+    if (remaining.length !== currentEdges.length) {
+      updateEdges(toProjectEdges(remaining));
+    }
+  }, [updateEdges]);
 
-  const onConnectEnd: OnConnectEnd = useCallback((event, connectionState) => {
-    if (!connectionState.isValid || !connectionState.fromNode) return;
-
-    const targetIsPane = (event.target as Element).classList.contains('react-flow__pane');
-    if (!targetIsPane) return;
-
-    const { clientX, clientY } = 'clientX' in event ? event : event.touches[0];
-    const rawPosition = screenToFlowPosition({ x: clientX, y: clientY });
-    const position = { x: rawPosition.x - 125, y: rawPosition.y - 60 };
-
-    const newNodeId = `node_${Date.now()}`;
-    const newNodeData: INodeData = {
-      title: 'Continuacion',
-      content: 'Detalla como sigue la historia aqui...',
-      color: 'slate',
-      characterTags: [],
-      chapterId: ''
-    };
-
-    const newNode: PlotFlowNode = {
-      id: newNodeId,
-      type: 'plot_card',
-      position,
-      data: newNodeData
-    };
-
-    const newEdge: Edge = {
-      id: `edge_${connectionState.fromNode.id}-${newNodeId}`,
-      source: connectionState.fromNode.id,
-      target: newNodeId,
-      sourceHandle: connectionState.fromHandle?.id || null
-    };
-
-    setNodes((currentNodes) => {
-      const freshNodes = [...currentNodes, newNode];
-      updateNodes(toProjectNodes(freshNodes));
-      return freshNodes;
-    });
-
-    setEdges((currentEdges) => {
-      const freshEdges = [...currentEdges, newEdge];
-      updateEdges(toProjectEdges(freshEdges));
-      return freshEdges;
-    });
-  }, [screenToFlowPosition, setEdges, setNodes, updateEdges, updateNodes]);
+  const onConnectEnd: OnConnectEnd = useCallback(() => {
+    // no-op: card creation from handles is disabled
+  }, []);
 
   const getMiniMapColor = (node: Node) => {
     switch ((node.data?.color as string)?.toLowerCase()) {

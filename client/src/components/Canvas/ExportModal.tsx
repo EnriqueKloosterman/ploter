@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useProject } from '../../context/useProject';
-import { apiUrl } from '../../lib/api';
+import { apiFetch } from '../../lib/api';
 import PrintableCardsModal from './PrintableCardsModal';
 
 interface ExportModalProps {
@@ -36,10 +36,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
     if (!project) return;
     setExporting(fmt.key);
     try {
-      const token = localStorage.getItem('plotweaver_token');
-      const res = await fetch(apiUrl(`/api/export/${project.metadata.projectId}/${fmt.key}`), {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      const res = await apiFetch(`/api/export/${project.metadata.projectId}/${fmt.key}`);
       if (!res.ok) throw new Error('Export failed');
 
       const blob = await res.blob();

@@ -32,7 +32,18 @@ export const resetApiAdapters = () => {
 
 export const apiFetch = (path: string, init?: RequestInit) => {
   const token = adapters.getToken();
-  const headers: Record<string, string> = { ...(init?.headers as Record<string, string> || {}) };
+  const headers: Record<string, string> = {};
+  if (init?.headers) {
+    if (Array.isArray(init.headers)) {
+      for (const [key, value] of init.headers) {
+        headers[key] = value;
+      }
+    } else if (typeof Headers !== 'undefined' && init.headers instanceof Headers) {
+      init.headers.forEach((value, key) => { headers[key] = value; });
+    } else if (typeof init.headers === 'object') {
+      Object.assign(headers, init.headers as Record<string, string>);
+    }
+  }
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }

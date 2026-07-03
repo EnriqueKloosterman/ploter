@@ -171,6 +171,6 @@ const ProjectSchema = new Schema<IProject>({
   chapterManager: {
     chapters: [ChapterSchema]
   }
-}, { timestamps: true });
+}, { timestamps: false });
 
 export default mongoose.model<IProject>('Project', ProjectSchema);

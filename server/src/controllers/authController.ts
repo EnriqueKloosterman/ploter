@@ -13,7 +13,9 @@ export const register = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ status: 'error', message: 'Email, password y nombre son requeridos' });
     }
 
-    const existing = await User.findOne({ email });
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const existing = await User.findOne({ email: normalizedEmail });
     if (existing) {
       return res.status(409).json({ status: 'error', message: 'El email ya esta registrado' });
     }
@@ -24,7 +26,7 @@ export const register = async (req: AuthRequest, res: Response) => {
     const user = await User.create({
       authorId,
       name,
-      email,
+      email: normalizedEmail,
       password: hashedPassword,
       globalSettings: { theme: 'dark', canvasGrid: true },
       authorLibrary: { globalTags: [], globalCharacters: [] }
@@ -64,7 +66,9 @@ export const login = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ status: 'error', message: 'Email y password son requeridos' });
     }
 
-    const user = await User.findOne({ email });
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user || !user.password) {
       return res.status(401).json({ status: 'error', message: 'Credenciales invalidas' });
     }
@@ -108,7 +112,9 @@ export const forgotPassword = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ status: 'error', message: 'Email es requerido' });
     }
 
-    const user = await User.findOne({ email });
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       return res.json({ status: 'success', message: 'Si el email existe, recibiras un enlace de recuperacion' });
     }
@@ -150,8 +156,8 @@ export const resetPassword = async (req: AuthRequest, res: Response) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     user.password = hashedPassword;
-    delete (user as any).resetPasswordToken;
-    delete (user as any).resetPasswordExpires;
+    (user as any).resetPasswordToken = undefined;
+    (user as any).resetPasswordExpires = undefined;
     await user.save();
 
     res.json({ status: 'success', message: 'Contrasena actualizada correctamente' });

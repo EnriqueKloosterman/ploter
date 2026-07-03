@@ -1,8 +1,9 @@
 # AGENTS.md — PlotWeaver
 
-## ⚠️ Regla crítica
+## ⚠️ Reglas críticas
 
 - **NUNCA** instalar dependencias ni modificar `package.json` / `pnpm-lock.yaml` sin preguntar primero y obtener aprobación explícita del usuario.
+- **NUNCA** hacer commit ni push sin autorización explícita del usuario. Solo el usuario puede pedir un commit.
 
 ## Stack
 

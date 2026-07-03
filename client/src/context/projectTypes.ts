@@ -61,6 +61,7 @@ export interface IChapter {
 }
 
 export interface IProjectData {
+  authorId: string;
   metadata: {
     projectId: string;
     title: string;

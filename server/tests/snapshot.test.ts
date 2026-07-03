@@ -103,7 +103,7 @@ describe('restoreSnapshot', () => {
 
   it('restores snapshot data and returns project', async () => {
     vi.mocked(Snapshot.findById).mockResolvedValue(mockSnapshot as any);
-    vi.mocked(Project.findById).mockResolvedValue(mockProject as any);
+    vi.mocked(Project.findOne).mockResolvedValue(mockProject as any);
 
     const req = mockReq({ params: { snapshotId: 'snap-1' } });
     const res = mockRes();
@@ -123,7 +123,7 @@ describe('restoreSnapshot', () => {
 
   it('returns 404 when project not found', async () => {
     vi.mocked(Snapshot.findById).mockResolvedValue(mockSnapshot as any);
-    vi.mocked(Project.findById).mockResolvedValue(null);
+    vi.mocked(Project.findOne).mockResolvedValue(null);
     const req = mockReq({ params: { snapshotId: 'snap-1' } });
     const res = mockRes();
     await restoreSnapshot(req, res);

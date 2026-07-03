@@ -33,8 +33,13 @@ const sanitizeNode = (node: ChildNode): string => {
   return `<${tagName}>${sanitizedChildren}</${tagName}>`;
 };
 
+const isEmptyParagraph = (html: string): boolean => {
+  const trimmed = html.trim().toLowerCase();
+  return trimmed === '<p></p>' || trimmed === '<p/>';
+};
+
 export const sanitizeRichTextHtml = (html?: string, fallback = '') => {
-  if (!html || html === '<p></p>') {
+  if (!html || isEmptyParagraph(html)) {
     return fallback;
   }
 
@@ -52,7 +57,7 @@ export const sanitizeRichTextHtml = (html?: string, fallback = '') => {
   const parser = new DOMParser();
   const document = parser.parseFromString(html, 'text/html');
   const sanitized = Array.from(document.body.childNodes).map(sanitizeNode).join('').trim();
-  const result = sanitized || fallback;
+  const result = sanitized && sanitized !== '<p></p>' ? sanitized : fallback;
   cache.set(html, result);
   return result;
 };

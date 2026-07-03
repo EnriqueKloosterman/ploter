@@ -17,6 +17,14 @@ export const updateProjectSchema = z.object({
       height: z.number(),
     }).optional(),
   })).optional(),
+  characterRelations: z.array(z.object({
+    id: z.string(),
+    sourceId: z.string(),
+    targetId: z.string(),
+    type: z.enum(['familia', 'romance', 'enemistad', 'aliado', 'mentor']).optional(),
+    label: z.string().optional(),
+    description: z.string().optional(),
+  })).optional(),
   canvas: z.object({
     viewport: z.object({
       x: z.number(),

@@ -44,14 +44,18 @@ export const createSnapshot = async (req: AuthRequest, res: Response) => {
 // POST /api/snapshots/restore/:snapshotId
 export const restoreSnapshot = async (req: AuthRequest, res: Response) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ status: 'error', message: 'No autenticado' });
+    }
+
     const snapshot = await Snapshot.findById(String(req.params.snapshotId));
     if (!snapshot) {
       return res.status(404).json({ status: 'error', message: 'Snapshot no encontrado' });
     }
 
-    const project = await Project.findById(snapshot.projectId);
+    const project = await Project.findOne({ _id: snapshot.projectId, authorId: req.user.userId });
     if (!project) {
-      return res.status(404).json({ status: 'error', message: 'Proyecto asociado no encontrado' });
+      return res.status(404).json({ status: 'error', message: 'Proyecto no encontrado o no autorizado' });
     }
 
     const data = snapshot.projectData;

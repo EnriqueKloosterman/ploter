@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useProject } from '../../context/useProject';
-import { apiUrl } from '../../lib/api';
+import { apiFetch } from '../../lib/api';
 
 interface AiResult {
   label: string;
@@ -33,9 +33,9 @@ const AIPanel: React.FC = () => {
     setResults(prev => ({ ...prev, [key]: { ...prev[key], loading: true, error: null, data: null } }));
 
     try {
-      const res = await fetch(apiUrl(endpoint), {
+      const res = await apiFetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('plotweaver_token') || ''}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
       const json = await res.json();
