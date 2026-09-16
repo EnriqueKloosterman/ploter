@@ -1,4 +1,7 @@
 import React, { useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Clock, GripHorizontal } from 'lucide-react';
+import EmptyState from '../ui/EmptyState';
 import { useProject } from '../../context/useProject';
 import type { INode, ICharacter } from '../../context/projectTypes';
 
@@ -26,7 +29,7 @@ const NodeChip: React.FC<{ node: INode; characters: ICharacter[] }> = ({ node, c
         {(node.data.characterTags || []).map((chId) => {
           const ch = characters.find((c) => c.id === chId);
           return ch ? (
-            <span key={chId} className="text-[8px] text-blue-400 bg-blue-900/30 px-1 rounded border border-blue-500/20">
+            <span key={chId} className="text-[10px] text-blue-400 bg-blue-900/30 px-1 rounded border border-blue-500/20">
               {ch.name}
             </span>
           ) : null;
@@ -37,6 +40,7 @@ const NodeChip: React.FC<{ node: INode; characters: ICharacter[] }> = ({ node, c
 };
 
 const TimelineView: React.FC = () => {
+  const { t } = useTranslation();
   const { project, reorderChapters } = useProject();
   const [zoom, setZoom] = useState(100);
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
@@ -113,6 +117,11 @@ const TimelineView: React.FC = () => {
       </div>
 
       <div className="flex-1 overflow-x-auto overflow-y-hidden">
+        {totalChapters === 0 ? (
+          <div className="h-full flex items-center justify-center">
+            <EmptyState icon={Clock} message={t('timeline.noNodes')} />
+          </div>
+        ) : (
         <div className="relative h-full min-h-[300px] p-6">
           {/* Timeline rail */}
           <div className="absolute top-6 left-0 right-0 h-0.5 bg-slate-700/60" style={{ marginLeft: 40, marginRight: 40 }} />
@@ -145,9 +154,7 @@ const TimelineView: React.FC = () => {
                   >
                     {/* Chapter header */}
                     <div className="px-3 py-2.5 bg-slate-700/40 border-b border-slate-700/30 flex items-center gap-2 cursor-grab active:cursor-grabbing">
-                      <svg className="w-3.5 h-3.5 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 8h16M4 16h16" />
-                      </svg>
+                      <GripHorizontal className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                       <span className="text-sm font-bold text-emerald-300 truncate">{ch.chapterId}</span>
                       <span className="text-[10px] text-slate-500 bg-slate-800 px-1.5 py-0.5 rounded-full ml-auto">{chNodes.length}</span>
                     </div>
@@ -194,6 +201,7 @@ const TimelineView: React.FC = () => {
             )}
           </div>
         </div>
+        )}
       </div>
     </div>
   );

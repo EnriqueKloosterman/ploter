@@ -32,6 +32,9 @@ importers:
       helmet:
         specifier: ^8.1.0
         version: 8.1.0
+      inkjs:
+        specifier: ^2.4.0
+        version: 2.4.0
       jsonwebtoken:
         specifier: ^9.0.3
         version: 9.0.3
@@ -930,6 +933,10 @@ packages:
 
   inherits@2.0.4:
     resolution: {integrity: sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==}
+
+  inkjs@2.4.0:
+    resolution: {integrity: sha512-EoPCYESIbMtfI8SqEDZCJwn+A5is0QozMLw250iic1ReJCgZpRKIezWj0VqgRUzAx0f3MmEbsUjY/ILe2815JQ==}
+    hasBin: true
 
   ip-address@10.2.0:
     resolution: {integrity: sha512-/+S6j4E9AHvW9SWMSEY9Xfy66O5PWvVEJ08O0y5JGyEKQpojb0K0GKpz/v5HJ/G0vi3D2sjGK78119oXZeE0qA==}
@@ -2531,6 +2538,8 @@ snapshots:
       wrappy: 1.0.2
 
   inherits@2.0.4: {}
+
+  inkjs@2.4.0: {}
 
   ip-address@10.2.0: {}
 

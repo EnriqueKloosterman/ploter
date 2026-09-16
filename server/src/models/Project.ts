@@ -30,6 +30,7 @@ export interface INodeData {
   categoryTags?: string[];
   characterTags?: string[];
   chapterId?: string;
+  inkContent?: string;
   [key: string]: unknown;
 }
 
@@ -62,6 +63,12 @@ export interface IChapter {
   manuscriptContent?: string;
 }
 
+export interface ICanvasBackground {
+  variant: 'dots' | 'lines' | 'cross';
+  imageUrl?: string;
+  imageOpacity?: number;
+}
+
 export interface IProject extends Document {
   authorId: mongoose.Types.ObjectId; // Ref to User._id
   metadata: {
@@ -76,6 +83,7 @@ export interface IProject extends Document {
     viewport: { x: number; y: number; zoom: number };
     nodes: INode[];
     edges: IEdge[];
+    background?: ICanvasBackground;
   };
   chapterManager: {
     chapters: IChapter[];
@@ -123,7 +131,8 @@ const NodeSchema = new Schema<INode>({
     color: String,
     characterTags: [String],
     categoryTags: [String],
-    chapterId: String
+    chapterId: String,
+    inkContent: String
   }
 }, { _id: false });
 
@@ -166,7 +175,12 @@ const ProjectSchema = new Schema<IProject>({
       zoom: { type: Number, default: 1 }
     },
     nodes: [NodeSchema],
-    edges: [EdgeSchema]
+    edges: [EdgeSchema],
+    background: {
+      variant: { type: String, enum: ['dots', 'lines', 'cross'], default: 'dots' },
+      imageUrl: { type: String },
+      imageOpacity: { type: Number, min: 0, max: 1, default: 0.4 }
+    }
   },
   chapterManager: {
     chapters: [ChapterSchema]

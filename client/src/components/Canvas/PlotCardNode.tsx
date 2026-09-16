@@ -5,6 +5,7 @@ import type { INodeData } from '../../context/projectTypes';
 import { useProjectData } from '../../context/useProject';
 import { useUser } from '../../context/UserContext';
 import { sanitizeRichTextHtml } from '../../lib/sanitizeHtml';
+import { useInkStatus } from './inkStatusContext';
 
 const getColorAccent = (colorName?: string) => {
   switch (colorName?.toLowerCase()) {
@@ -18,9 +19,10 @@ const getColorAccent = (colorName?: string) => {
   }
 };
 
-const PlotCardNode: React.FC<NodeProps> = ({ data, selected }) => {
+const PlotCardNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   const { project, activeFocusChapterId, activeFilterCharId } = useProjectData();
   const { tags } = useUser();
+  const inkStatusMap = useInkStatus();
   const nodeData = data as INodeData;
   const accentClass = getColorAccent(nodeData.color);
   const safeTitleHtml = sanitizeRichTextHtml(nodeData.title, 'Untitled Node');
@@ -31,6 +33,8 @@ const PlotCardNode: React.FC<NodeProps> = ({ data, selected }) => {
   const [expandedStats, setExpandedStats] = useState(false);
 
   const hasStats = !!nodeData.stats && nodeData.stats.trim().length > 0;
+  const hasInk = !!nodeData.inkContent && nodeData.inkContent.trim().length > 0;
+  const inkSt = inkStatusMap[id];
 
   const isFocused = activeFocusChapterId === null || activeFocusChapterId === nodeData.chapterId;
   const isFiltered = activeFilterCharId !== null && !(nodeData.characterTags || []).includes(activeFilterCharId);
@@ -63,6 +67,21 @@ const PlotCardNode: React.FC<NodeProps> = ({ data, selected }) => {
 
       <div className={`h-1.5 w-full ${accentClass}`}></div>
 
+      {hasInk && (
+        <span
+          className={`absolute top-3 right-3 z-10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded border ${
+            inkSt === 'error'
+              ? 'bg-red-500/20 text-red-300 border-red-500/40'
+              : inkSt === 'warning'
+                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                : 'bg-teal-500/20 text-teal-300 border-teal-500/40'
+          }`}
+          title={inkSt === 'error' ? 'Script Ink con errores' : inkSt === 'warning' ? 'Script Ink con avisos' : 'Script Ink'}
+        >
+          Ink
+        </span>
+      )}
+
       {nodeData.image?.url && (
         <>
           <img
@@ -89,7 +108,7 @@ const PlotCardNode: React.FC<NodeProps> = ({ data, selected }) => {
                 return tag ? (
                   <span
                     key={tagId}
-                    className="px-2 py-0.5 text-[9px] font-semibold rounded-full uppercase tracking-wider border"
+                    className="px-2 py-0.5 text-[10px] font-semibold rounded-full uppercase tracking-wider border"
                     style={{
                       backgroundColor: `${tag.color}30`,
                       color: tag.color,
@@ -101,7 +120,7 @@ const PlotCardNode: React.FC<NodeProps> = ({ data, selected }) => {
                 ) : (
                   <span
                     key={tagId}
-                    className="px-2 py-0.5 text-[9px] font-semibold rounded-full uppercase tracking-wider border bg-purple-500/20 text-purple-300 border-purple-500/30"
+                    className="px-2 py-0.5 text-[10px] font-semibold rounded-full uppercase tracking-wider border bg-purple-500/20 text-purple-300 border-purple-500/30"
                   >
                     {tagId}
                   </span>
@@ -118,13 +137,13 @@ const PlotCardNode: React.FC<NodeProps> = ({ data, selected }) => {
 
         {nodeData.characterTags && nodeData.characterTags.length > 0 && (
           <div className="pt-2 mt-1 border-t border-slate-700/50 flex flex-wrap gap-1">
-            <span className="text-[9px] text-slate-500 font-medium mr-1 uppercase self-center tracking-wider">Roles:</span>
+            <span className="text-[10px] text-slate-500 font-medium mr-1 uppercase self-center tracking-wider">Roles:</span>
             {nodeData.characterTags.map((charId, idx) => {
               const globalChar = project.characters.find((char) => char.id === charId);
               return (
                 <span
                   key={`${charId}-${idx}`}
-                  className="px-1.5 py-0.5 rounded bg-blue-900/40 border border-blue-500/30 text-[9px] font-semibold text-blue-200"
+                  className="px-1.5 py-0.5 rounded bg-blue-900/40 border border-blue-500/30 text-[10px] font-semibold text-blue-200"
                 >
                   {globalChar?.name || 'Desconocido'}
                 </span>
@@ -148,7 +167,7 @@ const PlotCardNode: React.FC<NodeProps> = ({ data, selected }) => {
 
           {expanded && nodeData.sceneAction && nodeData.sceneAction !== '<p></p>' && (
             <div
-              className="mt-1.5 text-[11px] text-slate-400 leading-relaxed italic max-h-40 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-1 duration-150"
+              className="mt-1.5 text-[11px] text-slate-400 leading-relaxed italic max-h-40 overflow-y-auto custom-scrollbar animate-slide-in-top"
               dangerouslySetInnerHTML={{ __html: safeSceneActionHtml }}
             />
           )}
@@ -169,7 +188,7 @@ const PlotCardNode: React.FC<NodeProps> = ({ data, selected }) => {
             </button>
 
             {expandedStats && (
-              <pre className="mt-1.5 text-[11px] text-slate-400 leading-relaxed whitespace-pre-wrap font-sans max-h-28 overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-1 duration-150">
+              <pre className="mt-1.5 text-[11px] text-slate-400 leading-relaxed whitespace-pre-wrap font-sans max-h-28 overflow-y-auto custom-scrollbar animate-slide-in-top">
                 {nodeData.stats}
               </pre>
             )}

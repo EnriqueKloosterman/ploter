@@ -2,8 +2,10 @@ import React, { useMemo, useState } from 'react';
 import { useReactFlow } from '@xyflow/react';
 import type { Node } from '@xyflow/react';
 import { useTranslation } from 'react-i18next';
+import { BookOpen, ChevronRight, Crosshair, Minus, Pencil, Plus, X } from 'lucide-react';
 import { useProject } from '../../context/useProject';
 import ConfirmModal from '../ui/ConfirmModal';
+import EmptyState from '../ui/EmptyState';
 import { sanitizeRichTextHtml } from '../../lib/sanitizeHtml';
 import type { IBeat } from '../../context/projectTypes';
 
@@ -103,35 +105,40 @@ const ChapterPanel: React.FC = () => {
   };
 
   return (
-    <div className="bg-slate-900 border border-slate-700/50 rounded-xl overflow-hidden shadow-lg mb-6 max-h-[500px] flex flex-col transition-all">
-      <div
-        className="px-4 py-3 border-b border-slate-700/50 flex justify-between items-center bg-slate-800/80 cursor-pointer hover:bg-slate-750 transition-colors select-none"
+    <div className="bg-slate-900 border border-white/10 rounded-xl overflow-hidden shadow-lg mb-6 max-h-[500px] flex flex-col transition-all">
+      <button
+        type="button"
+        className="px-4 py-3 border-b border-slate-700/50 flex justify-between items-center bg-slate-800/80 cursor-pointer hover:bg-slate-800 transition-colors select-none w-full text-left"
         onClick={() => setIsPanelOpen(!isPanelOpen)}
+        aria-expanded={isPanelOpen}
       >
         <div className="flex items-center gap-2">
-          <span className={`text-slate-400 text-xs transition-transform ${isPanelOpen ? 'rotate-90' : 'rotate-0'}`}>{'>'}</span>
-          <h3 className="text-sm font-semibold text-purple-400 uppercase tracking-widest">{t('sidebar.chapters')}</h3>
+          <ChevronRight className={`w-3 h-3 text-slate-400 transition-transform ${isPanelOpen ? 'rotate-90' : 'rotate-0'}`} />
+          <h3 className="label text-purple-400">{t('sidebar.chapters')}</h3>
           <span className="text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full">{chapters.length}</span>
         </div>
-        <button
+        <span
+          role="button"
+          tabIndex={0}
           onClick={(e) => { e.stopPropagation(); setIsAdding(!isAdding); setIsPanelOpen(true); }}
-          className="text-slate-400 hover:text-white transition-colors bg-slate-700/50 hover:bg-slate-600 rounded-md w-6 h-6 flex items-center justify-center font-bold"
-          title={t('chapters.addChapter')}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); setIsAdding(!isAdding); setIsPanelOpen(true); } }}
+          aria-label={isAdding ? t('common.cancel') : t('chapters.addChapter')}
+          className="text-slate-400 hover:text-white transition-colors bg-slate-700/50 hover:bg-slate-600 rounded-md w-7 h-7 flex items-center justify-center"
         >
-          {isAdding ? '-' : '+'}
-        </button>
-      </div>
+            {isAdding ? <Minus className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+          </span>
+      </button>
 
       {isPanelOpen && (
         <>
           {isAdding && (
-            <form onSubmit={handleAddSubmit} className="p-3 border-b border-slate-700/50 bg-slate-850 flex gap-2">
+            <form onSubmit={handleAddSubmit} className="p-3 border-b border-slate-700/50 bg-slate-900 flex gap-2">
               <input
                 type="text"
                 value={newChapterId}
                 onChange={(e) => setNewChapterId(e.target.value)}
                 placeholder={t('chapters.newChapter') + "..."}
-                className="flex-1 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                className="flex-1 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-accent"
                 autoFocus
               />
               <button type="submit" className="bg-purple-600 hover:bg-purple-500 text-white px-3 py-1 rounded text-sm font-medium transition-colors">
@@ -142,7 +149,7 @@ const ChapterPanel: React.FC = () => {
 
           <div className="p-3 overflow-y-auto space-y-4 grow custom-scrollbar relative">
             {chapters.length === 0 ? (
-              <p className="text-xs text-slate-500 italic text-center py-4">{t('chapters.noChapters')}</p>
+              <EmptyState icon={BookOpen} message={t('chapters.noChapters')} />
             ) : (
               chapters.map((chapter) => {
                 const linkedNodes = nodesByChapter.get(chapter.chapterId) || [];
@@ -152,9 +159,9 @@ const ChapterPanel: React.FC = () => {
                   <div key={chapter.chapterId} className="group/item border border-slate-700/50 rounded-lg bg-slate-800 flex flex-col relative transition-all">
                     <div
                       onClick={() => toggleChapter(chapter.chapterId)}
-                      className="py-2 flex items-center gap-2 px-3 border-b border-slate-700/50 bg-slate-750 font-sans tracking-wide pr-8 cursor-pointer hover:bg-slate-700 transition-colors"
+                      className="py-2 flex items-center gap-2 px-3 border-b border-slate-700/50 bg-slate-800 font-sans tracking-wide pr-8 cursor-pointer hover:bg-slate-700 transition-colors"
                     >
-                      <span className={`text-slate-400 transition-transform ${isOpen ? 'rotate-90' : 'rotate-0'}`}>{'>'}</span>
+                      <ChevronRight className={`w-3 h-3 text-slate-400 transition-transform ${isOpen ? 'rotate-90' : 'rotate-0'}`} />
                       <div>
                         {editingId === chapter.chapterId ? (
                           <form onSubmit={handleEditSubmit} onClick={(e) => e.stopPropagation()}>
@@ -180,16 +187,14 @@ const ChapterPanel: React.FC = () => {
                           className="text-slate-500 hover:text-emerald-400 hover:bg-slate-700 p-1 rounded-sm transition-colors"
                           title={t('common.edit')}
                         >
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                          </svg>
+                          <Pencil className="w-4 h-4" />
                         </button>
                         <button
                           onClick={(e) => handleFocusChapter(e, chapter.chapterId, linkedNodes)}
-                          className={`text-xs p-1 rounded transition-colors ${activeFocusChapterId === chapter.chapterId ? 'text-yellow-400 bg-yellow-400/20' : 'text-slate-500 hover:text-yellow-200 hover:bg-slate-700'}`}
+                          className={`p-1 rounded transition-colors ${activeFocusChapterId === chapter.chapterId ? 'text-yellow-400 bg-yellow-400/20' : 'text-slate-500 hover:text-yellow-200 hover:bg-slate-700'}`}
                           title={activeFocusChapterId === chapter.chapterId ? t('canvas.removeFocus') : t('canvas.focusChapter')}
                         >
-                          O
+                          <Crosshair className="w-3.5 h-3.5" />
                         </button>
                         <span className="text-xs font-medium text-slate-500 bg-slate-900 px-2 py-0.5 rounded-full border border-slate-700 ml-1">
                           {linkedNodes.length} {t('chapters.beats')}
@@ -202,15 +207,13 @@ const ChapterPanel: React.FC = () => {
                       className="absolute right-2 top-1.5 text-slate-500 hover:text-red-500 opacity-0 group-hover/item:opacity-100 transition-opacity p-1 z-10"
                       title={t('chapters.deleteChapter')}
                     >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
+                      <X className="w-4 h-4" />
                     </button>
 
                     {isOpen && (
                       <div className="py-2 px-3 space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
                         {chapter.beats.map((beat) => (
-                          <div key={beat.id} className="bg-slate-850 border border-slate-700/50 rounded-lg p-2 space-y-1">
+                          <div key={beat.id} className="bg-slate-900 border border-slate-700/50 rounded-lg p-2 space-y-1">
                             <div className="flex items-center gap-1">
                               <span className="w-1.5 h-1.5 rounded-full bg-purple-500 shrink-0" />
                               {editingBeat?.chapterId === chapter.chapterId && editingBeat?.beatId === beat.id ? (
@@ -222,25 +225,27 @@ const ChapterPanel: React.FC = () => {
                                     type="text"
                                     value={editBeatDesc}
                                     onChange={(e) => setEditBeatDesc(e.target.value)}
-                                    className="flex-1 bg-slate-900 border border-slate-600 rounded px-1.5 py-0.5 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                                    className="flex-1 bg-slate-900 border border-slate-600 rounded px-1.5 py-0.5 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-accent"
                                     autoFocus
                                     onBlur={() => setEditingBeat(null)}
                                   />
                                 </form>
                               ) : (
-                                <span
-                                  className="text-xs text-slate-300 flex-1 cursor-pointer hover:text-white"
+                                <button
+                                  type="button"
+                                  className="text-xs text-slate-300 flex-1 cursor-pointer hover:text-white text-left"
                                   onClick={() => { setEditingBeat({ chapterId: chapter.chapterId, beatId: beat.id }); setEditBeatDesc(beat.description); }}
                                 >
                                   {beat.description || <span className="text-slate-500 italic">{t('chapters.noDescription')}</span>}
-                                </span>
+                                </button>
                               )}
                               <button
+                                type="button"
                                 onClick={() => removeBeat(chapter.chapterId, beat.id)}
-                                className="text-slate-600 hover:text-red-400 text-[10px] p-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity"
-                                title={t('chapters.deleteBeat')}
+                                className="text-slate-600 hover:text-red-400 p-1 opacity-0 group-hover/item:opacity-100 transition-opacity"
+                                aria-label={t('chapters.deleteBeat')}
                               >
-                                x
+                                <X className="w-3 h-3" />
                               </button>
                             </div>
                             {beat.linkedNodes.length > 0 && (
@@ -279,11 +284,11 @@ const ChapterPanel: React.FC = () => {
                               value={newBeatDesc}
                               onChange={(e) => setNewBeatDesc(e.target.value)}
                               placeholder={t('chapters.beatDescription') + "..."}
-                              className="flex-1 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                              className="flex-1 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-accent"
                               autoFocus
                             />
-                            <button type="submit" className="bg-purple-600 hover:bg-purple-500 text-white px-2 py-1 rounded text-xs font-medium">+</button>
-                            <button type="button" onClick={() => { setAddingBeat(null); setNewBeatDesc(''); }} className="text-slate-500 hover:text-white text-xs px-1">x</button>
+                            <button type="submit" aria-label={t('common.create')} className="bg-purple-600 hover:bg-purple-500 text-white px-2 py-1 rounded text-xs font-medium flex items-center justify-center"><Plus className="w-3 h-3" /></button>
+                            <button type="button" onClick={() => { setAddingBeat(null); setNewBeatDesc(''); }} aria-label={t('common.cancel')} className="text-slate-500 hover:text-white p-1 flex items-center justify-center"><X className="w-3.5 h-3.5" /></button>
                           </form>
                         ) : (
                           <button

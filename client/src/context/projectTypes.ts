@@ -28,6 +28,7 @@ export interface INodeData {
   categoryTags?: string[];
   characterTags?: string[];
   chapterId?: string;
+  inkContent?: string;
   [key: string]: unknown;
 }
 
@@ -60,6 +61,12 @@ export interface IChapter {
   manuscriptContent?: string;
 }
 
+export interface ICanvasBackground {
+  variant: 'dots' | 'lines' | 'cross';
+  imageUrl?: string;
+  imageOpacity?: number;
+}
+
 export interface IProjectData {
   authorId: string;
   metadata: {
@@ -74,6 +81,7 @@ export interface IProjectData {
     viewport: { x: number; y: number; zoom: number };
     nodes: INode[];
     edges: IEdge[];
+    background?: ICanvasBackground;
   };
   chapterManager: {
     chapters: IChapter[];

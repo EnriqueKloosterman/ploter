@@ -2,6 +2,9 @@ import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
+import { FileText } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import EmptyState from '../ui/EmptyState';
 import { useProject } from '../../context/useProject';
 
 const stripHtml = (html: string) => html.replace(/<[^>]*>/g, '');
@@ -135,6 +138,7 @@ const ChapterEditor: React.FC<ChapterEditorProps> = ({ chapterId, manuscriptCont
 };
 
 const ManuscriptEditor: React.FC = () => {
+  const { t } = useTranslation();
   const { project, updateChapterManuscript } = useProject();
   const { chapters } = project.chapterManager;
   const { nodes } = project.canvas;
@@ -207,7 +211,7 @@ const ManuscriptEditor: React.FC = () => {
   if (chapters.length === 0) {
     return (
       <div className="h-full w-full bg-slate-900 flex items-center justify-center">
-        <p className="text-slate-500 italic">No hay capitulos. Crea capitulos desde el panel lateral para empezar a escribir.</p>
+        <EmptyState icon={FileText} message={t('chapters.noChapters')} />
       </div>
     );
   }
@@ -231,7 +235,7 @@ const ManuscriptEditor: React.FC = () => {
           </button>
           <button
             onClick={handleExportHtml}
-            className="px-3 py-1 text-xs bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg transition-colors"
+            className="px-3 py-1 text-xs bg-accent hover:bg-accent-strong text-white rounded-lg transition-colors"
             title="Exportar como HTML"
           >
             HTML

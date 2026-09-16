@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Download, LoaderCircle, Plus, Save, Tag } from 'lucide-react';
 import CharacterPanel from './CharacterPanel';
 import ChapterPanel from './ChapterPanel';
 import ProjectStats from '../ui/ProjectStats';
@@ -34,7 +35,7 @@ const SidebarArea: React.FC = () => {
 
   return (
     <div className="relative z-20 h-full flex">
-      <div className={`${isCollapsed ? 'w-0 overflow-hidden' : 'w-80'} h-full bg-[#1e293b] border-r border-slate-800 flex flex-col shadow-2xl transition-all duration-200`}>
+      <div className={`${isCollapsed ? 'w-0 overflow-hidden' : 'w-80'} h-full bg-surface-raised border-r border-slate-800 flex flex-col shadow-2xl transition-all duration-200`}>
         <div className="px-4 py-2 border-b border-slate-800 bg-slate-900 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <button 
@@ -62,47 +63,40 @@ const SidebarArea: React.FC = () => {
             onClick={() => setSnapshotsOpen(true)}
             className="text-slate-400 hover:text-amber-400 transition-colors bg-slate-800/50 hover:bg-slate-700/80 p-1.5 rounded-lg border border-slate-700/50 hover:border-amber-500/50"
             title="Snapshots"
+            aria-label="Snapshots"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
+            <Plus className="w-5 h-5" />
           </button>
           <button
             onClick={() => setTagsOpen(true)}
-            className="text-slate-400 hover:text-blue-400 transition-colors bg-slate-800/50 hover:bg-slate-700/80 p-1.5 rounded-lg border border-slate-700/50 hover:border-blue-500/50"
+            className="text-slate-400 hover:text-accent transition-colors bg-slate-800/50 hover:bg-slate-700/80 p-1.5 rounded-lg border border-slate-700/50 hover:border-accent/50"
             title="Gestionar tags"
+            aria-label="Gestionar tags"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-            </svg>
+            <Tag className="w-5 h-5" />
           </button>
           <button
             onClick={() => {
               exportProjectToMarkdown(project);
               showToast('Proyecto exportado a Markdown', 'success');
             }}
-            className="text-slate-400 hover:text-blue-400 transition-colors bg-slate-800/50 hover:bg-slate-700/80 p-1.5 rounded-lg border border-slate-700/50 hover:border-blue-500/50"
+            className="text-slate-400 hover:text-accent transition-colors bg-slate-800/50 hover:bg-slate-700/80 p-1.5 rounded-lg border border-slate-700/50 hover:border-accent/50"
             title="Exportar a Markdown"
+            aria-label="Exportar a Markdown"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-3 3m0 0l-3-3m3 3V4" />
-            </svg>
+            <Download className="w-5 h-5" />
           </button>
           <button
             onClick={handleManualSave}
             disabled={isSaving || !hasUnsavedChanges}
             className="text-slate-400 hover:text-emerald-400 disabled:text-slate-600 disabled:opacity-40 transition-colors bg-slate-800/50 hover:bg-slate-700/80 disabled:bg-slate-800/30 p-1.5 rounded-lg border border-slate-700/50 hover:border-emerald-500/50 disabled:border-slate-700/30"
             title="Guardar Proyecto Manualmente"
+            aria-label="Guardar Proyecto Manualmente"
           >
             {isSaving ? (
-              <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
+              <LoaderCircle className="w-5 h-5 animate-spin" />
             ) : (
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-              </svg>
+              <Save className="w-5 h-5" />
             )}
           </button>
         </div>

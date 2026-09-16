@@ -1,8 +1,10 @@
 import React, { useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Printer } from 'lucide-react';
 import { useProject } from '../../context/useProject';
 import { useUser } from '../../context/UserContext';
 import type { INode, ICharacter } from '../../context/projectTypes';
+import Modal from '../ui/Modal';
 
 const stripHtml = (html?: string) => (html || '').replace(/<[^>]*>/g, '');
 
@@ -86,16 +88,30 @@ const PrintableCardsModal: React.FC<{ isOpen: boolean; onClose: () => void }> = 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-slate-800 border border-slate-700/60 rounded-2xl shadow-2xl w-[640px] max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-4 border-b border-slate-700/40 shrink-0">
-          <h2 className="text-sm font-semibold text-slate-100">{t('printableCards.title')}</h2>
-          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-700 text-slate-400 hover:text-white transition-colors text-xs">
-            ESC
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={t('printableCards.title')}
+      size="lg"
+      footer={
+        <div className="flex items-center justify-end gap-2">
+          <iframe ref={iframeRef} style={{ display: 'none' }} title="print-frame" />
+          <button
+            onClick={onClose}
+            className="text-xs px-4 py-2 rounded-lg bg-slate-700/50 hover:bg-slate-700 text-slate-300 transition-colors"
+          >
+            {t('printableCards.close')}
+          </button>
+          <button
+            onClick={handlePrint}
+            className="text-xs px-4 py-2 rounded-lg bg-accent hover:bg-accent-strong text-white transition-colors flex items-center gap-1.5"
+          >
+            <Printer size={14} /> {t('printableCards.print')}
           </button>
         </div>
-
-        <div className="p-4 overflow-y-auto flex-1">
+      }
+    >
+        <div className="p-4">
           <p className="text-xs text-slate-500 mb-3">{t('printableCards.description')} ({project.canvas.nodes.length} {t('printableCards.cards')})</p>
           <div className="grid grid-cols-3 gap-2">
             {project.canvas.nodes.map((node: INode) => {
@@ -121,11 +137,11 @@ const PrintableCardsModal: React.FC<{ isOpen: boolean; onClose: () => void }> = 
                   }`} />
                   <div className="p-2 flex flex-col gap-1 flex-1">
                     <p className="text-[10px] font-bold text-slate-200 leading-tight line-clamp-2">{title}</p>
-                    {content && <p className="text-[9px] text-slate-400 leading-relaxed line-clamp-3 flex-1">{content}</p>}
+                    {content && <p className="text-[10px] text-slate-400 leading-relaxed line-clamp-3 flex-1">{content}</p>}
                     {charNames.length > 0 && (
                       <div className="flex flex-wrap gap-0.5">
                         {charNames.map((name: string) => (
-                          <span key={name} className="text-[7px] text-blue-300 bg-blue-900/30 px-1 py-0.5 rounded border border-blue-500/20">{name}</span>
+                          <span key={name} className="text-[10px] text-blue-300 bg-blue-900/30 px-1 py-0.5 rounded border border-blue-500/20">{name}</span>
                         ))}
                       </div>
                     )}
@@ -134,7 +150,7 @@ const PrintableCardsModal: React.FC<{ isOpen: boolean; onClose: () => void }> = 
                         {tagLabels.map((label: string) => {
                           const tag = tags.find((t) => t.label === label);
                           return (
-                            <span key={label} className="text-[7px] px-1 py-0.5 rounded border" style={tag ? { color: tag.color, borderColor: `${tag.color}40`, backgroundColor: `${tag.color}20` } : { color: '#64748b', borderColor: '#64748b40', backgroundColor: '#64748b20' }}>
+                            <span key={label} className="text-[10px] px-1 py-0.5 rounded border" style={tag ? { color: tag.color, borderColor: `${tag.color}40`, backgroundColor: `${tag.color}20` } : { color: '#64748b', borderColor: '#64748b40', backgroundColor: '#64748b20' }}>
                               {label}
                             </span>
                           );
@@ -147,24 +163,7 @@ const PrintableCardsModal: React.FC<{ isOpen: boolean; onClose: () => void }> = 
             })}
           </div>
         </div>
-
-        <div className="flex items-center justify-end gap-2 p-4 border-t border-slate-700/40 shrink-0">
-          <iframe ref={iframeRef} style={{ display: 'none' }} title="print-frame" />
-          <button
-            onClick={onClose}
-            className="text-xs px-4 py-2 rounded-lg bg-slate-700/50 hover:bg-slate-700 text-slate-300 transition-colors"
-          >
-            {t('printableCards.close')}
-          </button>
-          <button
-            onClick={handlePrint}
-            className="text-xs px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition-colors"
-          >
-            🖨️ {t('printableCards.print')}
-          </button>
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 };
 

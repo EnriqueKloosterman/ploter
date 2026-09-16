@@ -252,10 +252,51 @@
     "chapters": "Chapters",
     "noChapters": "No chapters yet"
   },
+  "outline": {
+    "empty": "The project is empty. Create nodes and chapters from the sidebar."
+  },
+  "canvasBg": {
+    "title": "Canvas background",
+    "pattern": "Pattern",
+    "pattern_dots": "Dots",
+    "pattern_lines": "Lines",
+    "pattern_cross": "Cross",
+    "image": "Background image",
+    "urlPlaceholder": "Paste an image URL...",
+    "apply": "Use",
+    "upload": "Upload image",
+    "uploading": "Uploading...",
+    "uploadError": "Failed to upload image",
+    "opacity": "Opacity",
+    "remove": "Remove"
+  },
   "storyFlow": {
     "title": "Story Flow",
     "noNodes": "No plot cards yet. Create some on the canvas.",
     "chapter": "Chapter"
+  },
+  "inkStudio": {
+    "withScript": "with script",
+    "unassigned": "No chapter",
+    "noNodes": "No plot cards yet. Create some on the canvas.",
+    "selectNode": "Select a card",
+    "insertTemplate": "Insert template",
+    "playFull": "Full story",
+    "playNode": "This card only",
+    "test": "Test",
+    "restart": "Restart",
+    "emptySource": "No Ink content to compile.",
+    "noErrors": "Compiles successfully",
+    "jumpToNode": "Go to card",
+    "player": "Player",
+    "playerEmpty": "Write some Ink script and press Test to play the story.",
+    "end": "End",
+    "back": "Back",
+    "varsTitle": "Variables",
+    "noVars": "No declared variables",
+    "choiceKey": "Choice",
+    "saving": "Saving...",
+    "saved": "Saved"
   },
   "aiPanel": {
     "title": "AI Assistant",

@@ -95,9 +95,9 @@ const AIPanel: React.FC = () => {
               value={plotFocus}
               onChange={e => setPlotFocus(e.target.value)}
               placeholder={t('aiPanel.focusPlaceholder')}
-              className="w-full bg-slate-700/30 border border-slate-600/30 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500/50"
+              className="w-full bg-slate-700/30 border border-slate-600/30 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-accent/50"
             />
-            <button onClick={handleSuggestPlot} disabled={results.plot.loading} className="w-full text-xs py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:text-slate-500 text-white transition-colors font-medium">
+            <button onClick={handleSuggestPlot} disabled={results.plot.loading} className="w-full text-xs py-1.5 rounded-lg bg-accent hover:bg-accent-strong disabled:bg-slate-700 disabled:text-slate-500 text-white transition-colors font-medium">
               {results.plot.loading ? t('aiPanel.thinking') : t('aiPanel.suggestTwists')}
             </button>
             {results.plot.data && (
@@ -123,17 +123,17 @@ const AIPanel: React.FC = () => {
                 onChange={e => setNamesCount(Math.min(20, Math.max(1, Number(e.target.value))))}
                 min={1}
                 max={20}
-                className="w-16 bg-slate-700/30 border border-slate-600/30 rounded-lg px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500/50 text-center"
+                className="w-16 bg-slate-700/30 border border-slate-600/30 rounded-lg px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-accent/50 text-center"
               />
               <input
                 type="text"
                 value={namesStyle}
                 onChange={e => setNamesStyle(e.target.value)}
                 placeholder={t('aiPanel.stylePlaceholder')}
-                className="flex-1 bg-slate-700/30 border border-slate-600/30 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500/50"
+                className="flex-1 bg-slate-700/30 border border-slate-600/30 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-accent/50"
               />
             </div>
-            <button onClick={handleGenerateNames} disabled={results.names.loading} className="w-full text-xs py-1.5 rounded-lg bg-violet-600 hover:bg-violet-500 disabled:bg-slate-700 disabled:text-slate-500 text-white transition-colors font-medium">
+            <button onClick={handleGenerateNames} disabled={results.names.loading} className="w-full text-xs py-1.5 rounded-lg bg-accent hover:bg-accent-strong disabled:bg-slate-700 disabled:text-slate-500 text-white transition-colors font-medium">
               {results.names.loading ? t('aiPanel.generating') : t('aiPanel.generateNamesBtn', { count: namesCount })}
             </button>
             {results.names.data && Array.isArray(results.names.data) && (
@@ -178,14 +178,14 @@ const AIPanel: React.FC = () => {
             <select
               value={summaryChapter}
               onChange={e => setSummaryChapter(e.target.value)}
-              className="w-full bg-slate-700/30 border border-slate-600/30 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500/50"
+              className="w-full bg-slate-700/30 border border-slate-600/30 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-accent/50"
             >
               <option value="all">{t('aiPanel.allProject')}</option>
               {chapters.map(ch => (
                 <option key={ch.chapterId} value={ch.chapterId}>{ch.chapterId}</option>
               ))}
             </select>
-            <button onClick={handleSummarize} disabled={results.summary.loading} className="w-full text-xs py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 disabled:text-slate-500 text-white transition-colors font-medium">
+            <button onClick={handleSummarize} disabled={results.summary.loading} className="w-full text-xs py-1.5 rounded-lg bg-accent hover:bg-accent-strong disabled:bg-slate-700 disabled:text-slate-500 text-white transition-colors font-medium">
               {results.summary.loading ? t('aiPanel.summarizing') : t('aiPanel.generateSummary')}
             </button>
             {results.summary.data && (

@@ -32,3 +32,4 @@ export { exportFountain } from './fountain.js';
 export { exportDocx } from './docx.js';
 export { exportPdf } from './pdf.js';
 export { exportEpub } from './epub.js';
+export { exportHtmlPlayable } from './htmlPlayable.js';

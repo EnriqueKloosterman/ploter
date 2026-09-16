@@ -7,6 +7,7 @@ import { useProject } from '../../context/useProject';
 import { useUser } from '../../context/UserContext';
 import { uploadImage } from '../../lib/upload';
 import ConfirmModal from '../ui/ConfirmModal';
+import Modal from '../ui/Modal';
 import RichTextEditor from '../ui/RichTextEditor';
 
 interface Props {
@@ -15,6 +16,7 @@ interface Props {
   node: Node | null;
   onSave: (nodeId: string, newData: INodeData) => void;
   onDuplicate?: (node: Node) => void;
+  onOpenInkStudio?: (nodeId: string) => void;
 }
 
 const getFormDataFromNode = (node: Node | null): Partial<INodeData> => {
@@ -34,7 +36,7 @@ const getFormDataFromNode = (node: Node | null): Partial<INodeData> => {
   };
 };
 
-const PlotNodeModal: React.FC<Props> = ({ isOpen, onClose, node, onSave, onDuplicate }) => {
+const PlotNodeModal: React.FC<Props> = ({ isOpen, onClose, node, onSave, onDuplicate, onOpenInkStudio }) => {
   const { t } = useTranslation();
   const [formData, setFormData] = useState<Partial<INodeData>>(() => getFormDataFromNode(node));
   const { project } = useProject();
@@ -50,15 +52,6 @@ const PlotNodeModal: React.FC<Props> = ({ isOpen, onClose, node, onSave, onDupli
     setFormData(getFormDataFromNode(node));
   }, [node]);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [isOpen, onClose]);
-
   if (!isOpen || !node) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -68,23 +61,11 @@ const PlotNodeModal: React.FC<Props> = ({ isOpen, onClose, node, onSave, onDupli
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity">
-      <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        <div className="px-6 py-4 border-b border-white/10 bg-slate-800/50 flex justify-between items-center">
-          <h2 className="text-lg font-bold text-slate-100 font-sans tracking-wide">{t('nodeModal.editCard')}</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-slate-400 hover:text-white transition-colors"
-          >
-            x
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+    <Modal isOpen={isOpen} onClose={onClose} title={t('nodeModal.editCard')}>
+      <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">{t('nodeModal.title')}</label>
-            <div className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 focus-within:ring-2 focus-within:ring-blue-500 transition-all">
+            <label className="block label text-slate-400 mb-1">{t('nodeModal.title')}</label>
+            <div className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 focus-within:ring-2 focus-within:ring-accent transition-all">
               <RichTextEditor
                 key={`title-${node.id}`}
                 content={formData.title || ''}
@@ -96,8 +77,8 @@ const PlotNodeModal: React.FC<Props> = ({ isOpen, onClose, node, onSave, onDupli
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">{t('nodeModal.description')}</label>
-            <div className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 focus-within:ring-2 focus-within:ring-blue-500 transition-all">
+            <label className="block label text-slate-400 mb-1">{t('nodeModal.description')}</label>
+            <div className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 focus-within:ring-2 focus-within:ring-accent transition-all">
               <RichTextEditor
                 key={`content-${node.id}`}
                 content={formData.content || ''}
@@ -108,8 +89,8 @@ const PlotNodeModal: React.FC<Props> = ({ isOpen, onClose, node, onSave, onDupli
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">{t('nodeModal.sceneAction')}</label>
-            <div className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 focus-within:ring-2 focus-within:ring-blue-500 transition-all">
+            <label className="block label text-slate-400 mb-1">{t('nodeModal.sceneAction')}</label>
+            <div className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 focus-within:ring-2 focus-within:ring-accent transition-all">
               <RichTextEditor
                 key={`action-${node.id}`}
                 content={formData.sceneAction || ''}
@@ -121,19 +102,19 @@ const PlotNodeModal: React.FC<Props> = ({ isOpen, onClose, node, onSave, onDupli
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">{t('nodeModal.stats')}</label>
+            <label className="block label text-slate-400 mb-1">{t('nodeModal.stats')}</label>
             <textarea
               key={`stats-${node.id}`}
               value={formData.stats || ''}
               onChange={(e) => setFormData({ ...formData, stats: e.target.value })}
               placeholder={t('nodeModal.statsPlaceholder')}
               rows={3}
-              className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all resize-y font-mono"
+              className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-accent transition-all resize-y font-mono"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">{t('nodeModal.backgroundImage')}</label>
+            <label className="block label text-slate-400 mb-2">{t('nodeModal.backgroundImage')}</label>
 
             {formData.image?.url ? (
               <div className="relative rounded-lg overflow-hidden border border-slate-700/50 bg-slate-950">
@@ -193,7 +174,7 @@ const PlotNodeModal: React.FC<Props> = ({ isOpen, onClose, node, onSave, onDupli
                   onClick={() => setShowUrlInput(!showUrlInput)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
                     showUrlInput
-                      ? 'bg-blue-600/30 border-blue-500 text-blue-200'
+                      ? 'bg-emerald-600/30 border-emerald-500 text-emerald-200'
                       : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
                   }`}
                 >
@@ -209,7 +190,7 @@ const PlotNodeModal: React.FC<Props> = ({ isOpen, onClose, node, onSave, onDupli
                   value={urlInput}
                   onChange={(e) => setUrlInput(e.target.value)}
                   placeholder="https://..."
-                  className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-accent transition-all"
                 />
                 <button
                   type="button"
@@ -220,7 +201,7 @@ const PlotNodeModal: React.FC<Props> = ({ isOpen, onClose, node, onSave, onDupli
                       setShowUrlInput(false);
                     }
                   }}
-                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-600 hover:bg-blue-500 text-white transition-colors"
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-accent hover:bg-accent-strong text-white transition-colors"
                 >
                   {t('common.accept')}
                 </button>
@@ -229,14 +210,14 @@ const PlotNodeModal: React.FC<Props> = ({ isOpen, onClose, node, onSave, onDupli
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">{t('nodeModal.color')}</label>
+            <label className="block label text-slate-400 mb-2">{t('nodeModal.color')}</label>
             <div className="flex gap-3">
               {['slate', 'blue', 'green', 'yellow', 'orange', 'red', 'purple'].map((color) => (
                 <button
                   key={color}
                   type="button"
                   onClick={() => setFormData({ ...formData, color })}
-                  className={`w-6 h-6 rounded-full border-2 transition-transform ${
+                  className={`w-7 h-7 rounded-full border-2 transition-transform ${
                     formData.color === color ? 'border-white scale-125' : 'border-transparent hover:scale-110'
                   }
                     ${color === 'slate' ? 'bg-slate-500' : ''}
@@ -254,7 +235,7 @@ const PlotNodeModal: React.FC<Props> = ({ isOpen, onClose, node, onSave, onDupli
 
           {tags.length > 0 && (
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">{t('nodeModal.tags')}</label>
+              <label className="block label text-slate-400 mb-2">{t('nodeModal.tags')}</label>
               <div className="flex flex-wrap gap-2">
                 {tags.map((tag) => {
                   const isSelected = formData.categoryTags?.includes(tag.tagId);
@@ -284,7 +265,7 @@ const PlotNodeModal: React.FC<Props> = ({ isOpen, onClose, node, onSave, onDupli
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">{t('nodeModal.linkedCharacters')}</label>
+            <label className="block label text-slate-400 mb-2">{t('nodeModal.linkedCharacters')}</label>
             {project.characters.length === 0 ? (
               <p className="text-xs text-slate-500 italic">{t('nodeModal.noGlobalCharacters')}</p>
             ) : (
@@ -305,7 +286,7 @@ const PlotNodeModal: React.FC<Props> = ({ isOpen, onClose, node, onSave, onDupli
                       }}
                       className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
                         isSelected
-                          ? 'bg-blue-600/30 border-blue-500 text-blue-200 shadow-[0_0_10px_rgba(59,130,246,0.2)]'
+                          ? 'bg-emerald-600/20 border-emerald-500 text-emerald-200 shadow-lg shadow-emerald-500/10'
                           : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500 hover:text-slate-200'
                       }`}
                     >
@@ -318,11 +299,11 @@ const PlotNodeModal: React.FC<Props> = ({ isOpen, onClose, node, onSave, onDupli
           </div>
 
           <div className="pb-2">
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">{t('nodeModal.chapterRoot')}</label>
+            <label className="block label text-slate-400 mb-2">{t('nodeModal.chapterRoot')}</label>
             <select
               value={formData.chapterId || ''}
               onChange={(e) => setFormData({ ...formData, chapterId: e.target.value })}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-accent transition-colors"
             >
               <option value="">{t('nodeModal.noChapter')}</option>
               {project.chapterManager.chapters.map((chapter) => (
@@ -346,9 +327,18 @@ const PlotNodeModal: React.FC<Props> = ({ isOpen, onClose, node, onSave, onDupli
                 <button
                   type="button"
                   onClick={() => { onDuplicate(node); onClose(); }}
-                  className="text-blue-400 hover:text-blue-300 text-xs font-bold uppercase transition-colors px-2 py-1 rounded border border-transparent hover:border-blue-500/30"
+                  className="text-sky-400 hover:text-sky-300 text-xs font-bold uppercase transition-colors px-2 py-1 rounded border border-transparent hover:border-sky-500/30"
                 >
                   {t('nodeModal.duplicate')}
+                </button>
+              )}
+              {onOpenInkStudio && (
+                <button
+                  type="button"
+                  onClick={() => { onOpenInkStudio(node.id); onClose(); }}
+                  className="text-teal-400 hover:text-teal-300 text-xs font-bold uppercase transition-colors px-2 py-1 rounded border border-transparent hover:border-teal-500/30"
+                >
+                  Ink
                 </button>
               )}
             </div>
@@ -362,14 +352,13 @@ const PlotNodeModal: React.FC<Props> = ({ isOpen, onClose, node, onSave, onDupli
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/30 transition-all font-sans"
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-accent hover:bg-accent-strong text-white shadow-lg shadow-emerald-500/30 transition-all font-sans"
               >
                 {t('nodeModal.applyChanges')}
               </button>
             </div>
           </div>
         </form>
-      </div>
       <ConfirmModal
         isOpen={isConfirmOpen}
         title={t('nodeModal.confirmDelete')}
@@ -381,7 +370,7 @@ const PlotNodeModal: React.FC<Props> = ({ isOpen, onClose, node, onSave, onDupli
         }}
         onCancel={() => setIsConfirmOpen(false)}
       />
-    </div>
+    </Modal>
   );
 };
 

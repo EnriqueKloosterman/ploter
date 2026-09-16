@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { ICharacter, ICharacterRelation } from '../../context/projectTypes';
+import Modal from '../ui/Modal';
 
 const RELATION_TYPES: ICharacterRelation['type'][] = ['familia', 'romance', 'enemistad', 'aliado', 'mentor'];
 const TYPE_COLORS: Record<string, string> = {
@@ -56,13 +57,8 @@ const RelationEditModal: React.FC<RelationEditModalProps> = ({ isOpen, character
   const otherChars = characters.filter((c) => c.id !== sourceId);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-lg font-bold text-slate-100 mb-4">
-          {editingRelation ? 'Editar relacion' : 'Nueva relacion'}
-        </h2>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <Modal isOpen={isOpen} onClose={onClose} title={editingRelation ? 'Editar relacion' : 'Nueva relacion'}>
+      <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <div>
             <label className="block text-xs font-medium text-slate-400 mb-1">Personaje A</label>
             <select value={sourceId} onChange={(e) => setSourceId(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500">
@@ -138,13 +134,12 @@ const RelationEditModal: React.FC<RelationEditModalProps> = ({ isOpen, character
             <button type="button" onClick={onClose} className="px-4 py-2 text-xs text-slate-400 hover:text-slate-200 bg-slate-700/50 hover:bg-slate-700 rounded-lg transition-colors">
               Cancelar
             </button>
-            <button type="submit" className="px-4 py-2 text-xs text-white bg-emerald-600 hover:bg-emerald-500 rounded-lg transition-colors font-medium">
+            <button type="submit" className="px-4 py-2 text-xs text-white bg-accent hover:bg-accent-strong rounded-lg transition-colors font-medium">
               {editingRelation ? 'Guardar' : 'Crear'}
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   );
 };
 

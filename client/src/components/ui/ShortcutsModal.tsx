@@ -1,5 +1,7 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { HelpCircle } from 'lucide-react';
+import Modal from './Modal';
 
 interface ShortcutsModalProps {
   isOpen: boolean;
@@ -8,144 +10,105 @@ interface ShortcutsModalProps {
 
 const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose }) => {
   const { t } = useTranslation();
-  useEffect(() => {
-    if (!isOpen) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [isOpen, onClose]);
-
-  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div 
-        className="bg-slate-900 border border-slate-700/80 shadow-2xl rounded-2xl w-full max-w-lg overflow-hidden transform scale-100 transition-all"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="px-6 py-4 border-b border-slate-800 bg-slate-800/50 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
-              <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-bold text-slate-100">{t('shortcuts.title')}</h3>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="lg"
+      footer={<p className="text-xs text-slate-500 italic text-center">{t('shortcuts.tip')}</p>}
+      title={
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-accent/10 rounded-lg border border-accent/20">
+            <HelpCircle className="w-5 h-5 text-accent" />
           </div>
-          <button 
-            onClick={onClose}
-            className="text-slate-500 hover:text-white transition-colors bg-slate-800 hover:bg-slate-700 rounded p-1"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          {t('shortcuts.title')}
         </div>
-
-        <div className="p-6 space-y-4">
-          <div className="space-y-3">
-
-            {/* Shortcut Item */}
-            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
-              <span className="text-sm font-medium text-slate-300">{t('shortcuts.saveProject')}</span>
-              <kbd className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-md text-xs font-mono text-emerald-400 shadow-sm">
-                Ctrl + S
-              </kbd>
-            </div>
-
-            {/* Shortcut Item */}
-            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
-              <span className="text-sm font-medium text-slate-300">{t('shortcuts.newCard')}</span>
-              <kbd className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-md text-xs font-mono text-emerald-400 shadow-sm">
-                N
-              </kbd>
-            </div>
-
-            {/* Shortcut Item */}
-            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
-              <span className="text-sm font-medium text-slate-300">{t('shortcuts.newChapter')}</span>
-              <kbd className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-md text-xs font-mono text-purple-400 shadow-sm">
-                C
-              </kbd>
-            </div>
-
-            {/* Shortcut Item */}
-            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
-              <span className="text-sm font-medium text-slate-300">{t('shortcuts.undo')}</span>
-              <kbd className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-md text-xs font-mono text-amber-400 shadow-sm">
-                Ctrl + Z
-              </kbd>
-            </div>
-
-            {/* Shortcut Item */}
-            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
-              <span className="text-sm font-medium text-slate-300">{t('shortcuts.redo')}</span>
-              <kbd className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-md text-xs font-mono text-amber-400 shadow-sm">
-                Ctrl + Shift + Z
-              </kbd>
-            </div>
-
-            {/* Shortcut Item */}
-            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
-              <span className="text-sm font-medium text-slate-300">{t('shortcuts.closeModal')}</span>
-              <kbd className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-md text-xs font-mono text-slate-400 shadow-sm">
-                Escape
-              </kbd>
-            </div>
-
-            {/* Shortcut Item */}
-            <hr className="border-slate-700/50 my-2" />
-
-            {/* Shortcut Item */}
-            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
-              <span className="text-sm font-medium text-slate-300">{t('shortcuts.selectMultiple')}</span>
-              <kbd className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-md text-xs font-mono text-emerald-400 shadow-sm">
-                Shift + Arrastrar Mouse
-              </kbd>
-            </div>
-
-            {/* Shortcut Item */}
-            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
-              <span className="text-sm font-medium text-slate-300">{t('shortcuts.deleteSelected')}</span>
-              <kbd className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-md text-xs font-mono text-red-400 shadow-sm">
-                Retroceso (Del)
-              </kbd>
-            </div>
-
-            {/* Shortcut Item */}
-            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
-              <span className="text-sm font-medium text-slate-300">{t('shortcuts.joinCards')}</span>
-              <span className="text-xs text-slate-400 bg-slate-800 px-3 py-1.5 rounded-md border border-slate-700">
-                Arrastrar círculo lateral a otra carta
-              </span>
-            </div>
-
-            {/* Shortcut Item */}
-            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
-              <span className="text-sm font-medium text-slate-300">{t('shortcuts.panNavigate')}</span>
-              <span className="text-xs text-slate-400 bg-slate-800 px-3 py-1.5 rounded-md border border-slate-700">
-                Lazo Izquierdo en el fondo
-              </span>
-            </div>
-
-             {/* Shortcut Item */}
-             <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
-              <span className="text-sm font-medium text-slate-300">{t('shortcuts.jumpChapter')}</span>
-              <span className="text-xs text-slate-400 bg-slate-800 px-3 py-1.5 rounded-md border border-slate-700">
-                Pulsar icono "👁️" en menú izquierdo
-              </span>
-            </div>
-
+      }
+    >
+      <div className="p-6 space-y-4">
+        <div className="space-y-3">
+          <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
+            <span className="text-sm font-medium text-slate-300">{t('shortcuts.saveProject')}</span>
+            <kbd className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-md text-xs font-mono text-emerald-400 shadow-sm">
+              Ctrl + S
+            </kbd>
           </div>
-        </div>
-        
-        <div className="px-6 py-4 bg-slate-900/80 border-t border-slate-800 text-center">
-          <p className="text-xs text-slate-500 italic">{t('shortcuts.tip')}</p>
+
+          <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
+            <span className="text-sm font-medium text-slate-300">{t('shortcuts.newCard')}</span>
+            <kbd className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-md text-xs font-mono text-emerald-400 shadow-sm">
+              N
+            </kbd>
+          </div>
+
+          <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
+            <span className="text-sm font-medium text-slate-300">{t('shortcuts.newChapter')}</span>
+            <kbd className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-md text-xs font-mono text-purple-400 shadow-sm">
+              C
+            </kbd>
+          </div>
+
+          <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
+            <span className="text-sm font-medium text-slate-300">{t('shortcuts.undo')}</span>
+            <kbd className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-md text-xs font-mono text-amber-400 shadow-sm">
+              Ctrl + Z
+            </kbd>
+          </div>
+
+          <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
+            <span className="text-sm font-medium text-slate-300">{t('shortcuts.redo')}</span>
+            <kbd className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-md text-xs font-mono text-amber-400 shadow-sm">
+              Ctrl + Shift + Z
+            </kbd>
+          </div>
+
+          <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
+            <span className="text-sm font-medium text-slate-300">{t('shortcuts.closeModal')}</span>
+            <kbd className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-md text-xs font-mono text-slate-400 shadow-sm">
+              Escape
+            </kbd>
+          </div>
+
+          <hr className="border-slate-700/50 my-2" />
+
+          <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
+            <span className="text-sm font-medium text-slate-300">{t('shortcuts.selectMultiple')}</span>
+            <kbd className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-md text-xs font-mono text-emerald-400 shadow-sm">
+              Shift + Arrastrar Mouse
+            </kbd>
+          </div>
+
+          <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
+            <span className="text-sm font-medium text-slate-300">{t('shortcuts.deleteSelected')}</span>
+            <kbd className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-md text-xs font-mono text-red-400 shadow-sm">
+              Retroceso (Del)
+            </kbd>
+          </div>
+
+          <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
+            <span className="text-sm font-medium text-slate-300">{t('shortcuts.joinCards')}</span>
+            <span className="text-xs text-slate-400 bg-slate-800 px-3 py-1.5 rounded-md border border-slate-700">
+              Arrastrar círculo lateral a otra carta
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
+            <span className="text-sm font-medium text-slate-300">{t('shortcuts.panNavigate')}</span>
+            <span className="text-xs text-slate-400 bg-slate-800 px-3 py-1.5 rounded-md border border-slate-700">
+              Lazo Izquierdo en el fondo
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
+            <span className="text-sm font-medium text-slate-300">{t('shortcuts.jumpChapter')}</span>
+            <span className="text-xs text-slate-400 bg-slate-800 px-3 py-1.5 rounded-md border border-slate-700">
+              Pulsar icono "👁️" en menú izquierdo
+            </span>
+          </div>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 };
 

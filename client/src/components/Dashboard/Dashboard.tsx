@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Plus } from 'lucide-react';
 import { apiFetch } from '../../lib/api';
+import Spinner from '../ui/Spinner';
 import { useAuth } from '../../context/AuthContext';
 import InputModal from '../ui/InputModal';
 import ConfirmModal from '../ui/ConfirmModal';
@@ -90,15 +92,15 @@ const Dashboard: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-[#0f172a] text-slate-300">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mb-4"></div>
+      <div className="flex h-screen w-full items-center justify-center bg-surface text-slate-300">
+        <Spinner size="lg" />
         <p className="ml-4 font-semibold text-lg">Cargando biblioteca...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-slate-200 p-10 font-sans">
+    <div className="min-h-screen bg-surface text-slate-200 p-10 font-sans">
       <div className="max-w-6xl mx-auto">
         <header className="flex justify-between items-center mb-12 border-b border-white/10 pb-6">
           <div>
@@ -124,9 +126,9 @@ const Dashboard: React.FC = () => {
             <button
               onClick={() => setCreatePromptOpen(true)}
               disabled={isCreating}
-              className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all hover:-translate-y-0.5"
+              className="flex items-center gap-2 px-6 py-3 bg-accent hover:bg-accent-strong disabled:bg-accent-deep text-white font-bold rounded-xl shadow-lg shadow-accent/20 transition-all hover:-translate-y-0.5"
             >
-              <span className="text-xl leading-none">+</span>
+              <Plus className="w-5 h-5" />
               {t('dashboard.newProject')}
             </button>
           </div>
@@ -134,10 +136,11 @@ const Dashboard: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {projects.map((proj) => (
-            <div
+            <button
+              type="button"
               key={proj.metadata.projectId}
               onClick={() => navigate(`/project/${proj.metadata.projectId}`)}
-              className="bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 hover:border-emerald-500/50 p-6 rounded-2xl cursor-pointer transition-all hover:scale-[1.02] shadow-xl group relative overflow-hidden flex flex-col justify-between h-48"
+              className="bg-slate-800/50 hover:bg-slate-800 border border-white/10 hover:border-accent/60 p-6 rounded-xl cursor-pointer transition-all hover:scale-[1.02] shadow-xl group relative overflow-hidden flex flex-col justify-between text-left h-48"
             >
               <div>
                 <h2 className="text-xl font-bold text-slate-100 mb-3 group-hover:text-emerald-400 transition-colors line-clamp-2">
@@ -167,17 +170,17 @@ className="hover:text-red-400 transition-colors"
                 </div>
               </div>
 
-              <div className="flex justify-between items-end text-xs font-medium text-slate-500 mt-4">
+              <div className="flex justify-between items-end text-xs font-medium text-slate-400 mt-4">
                 <span>{t('dashboard.lastModified')}: {new Date(proj.metadata.lastModified).toLocaleDateString()}</span>
-                <span className="bg-slate-900 px-3 py-1.5 rounded-lg text-slate-400 group-hover:bg-emerald-900/50 group-hover:text-emerald-300 transition-colors">Entrar</span>
+                <span className="bg-slate-900 px-3 py-1.5 rounded-lg text-slate-400 group-hover:bg-accent/15 group-hover:text-emerald-300 transition-colors">Entrar</span>
               </div>
-            </div>
+            </button>
           ))}
 
           {projects.length === 0 && (
             <div className="col-span-full py-20 text-center">
               <p className="text-slate-500 text-lg mb-4">{t('dashboard.noProjects')}</p>
-              <button onClick={() => setCreatePromptOpen(true)} className="text-emerald-400 hover:text-emerald-300 font-semibold underline underline-offset-4">{t('dashboard.createFirst')}</button>
+              <button onClick={() => setCreatePromptOpen(true)} className="text-accent hover:text-accent-strong font-semibold underline underline-offset-4">{t('dashboard.createFirst')}</button>
             </div>
           )}
         </div>

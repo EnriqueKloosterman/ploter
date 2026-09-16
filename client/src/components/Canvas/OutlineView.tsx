@@ -1,5 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { useReactFlow } from '@xyflow/react';
+import { useTranslation } from 'react-i18next';
+import { Check, ChevronRight, ListTree } from 'lucide-react';
+import EmptyState from '../ui/EmptyState';
 import { useProject } from '../../context/useProject';
 import { useUser } from '../../context/UserContext';
 import { sanitizeRichTextHtml } from '../../lib/sanitizeHtml';
@@ -8,6 +11,7 @@ import type { INode, ICharacter } from '../../context/projectTypes';
 const stripHtml = (html: string) => html.replace(/<[^>]*>/g, '');
 
 const OutlineView: React.FC = () => {
+  const { t } = useTranslation();
   const { project, updateNodes } = useProject();
   const { tags } = useUser();
   const { setCenter, getNode } = useReactFlow();
@@ -89,7 +93,7 @@ const OutlineView: React.FC = () => {
         </div>
 
         {chapters.length === 0 && nodesByChapter.unassigned.length === 0 && (
-          <p className="text-sm text-slate-500 italic">El proyecto esta vacio. Crea nodos y capitulos desde el panel lateral.</p>
+          <EmptyState icon={ListTree} message={t('outline.empty')} />
         )}
 
         {chapters.map((ch) => {
@@ -102,7 +106,7 @@ const OutlineView: React.FC = () => {
                 onClick={() => toggleChapter(ch.chapterId)}
                 className="w-full px-4 py-3 flex items-center gap-3 bg-slate-800/80 hover:bg-slate-700/80 transition-colors text-left"
               >
-                <span className={`text-slate-400 text-xs transition-transform ${isOpen ? 'rotate-90' : ''}`}>{'>'}</span>
+                <ChevronRight className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
                 <span className="text-sm font-bold text-emerald-300">{ch.chapterId}</span>
                 <span className="text-xs text-slate-500 bg-slate-700 px-2 py-0.5 rounded-full ml-auto">{chNodes.length} escenas</span>
               </button>
@@ -135,7 +139,7 @@ const OutlineView: React.FC = () => {
               onClick={() => setOpenUnassigned((v) => !v)}
               className="w-full px-4 py-3 flex items-center gap-3 bg-slate-800/50 hover:bg-slate-700/50 transition-colors text-left"
             >
-              <span className={`text-slate-400 text-xs transition-transform ${openUnassigned ? 'rotate-90' : ''}`}>{'>'}</span>
+              <ChevronRight className={`w-3.5 h-3.5 text-slate-400 transition-transform ${openUnassigned ? 'rotate-90' : ''}`} />
               <span className="text-sm font-bold text-slate-400">Sin capitulo</span>
               <span className="text-xs text-slate-500 bg-slate-700 px-2 py-0.5 rounded-full ml-auto">{nodesByChapter.unassigned.length} escenas</span>
             </button>
@@ -166,7 +170,7 @@ const OutlineView: React.FC = () => {
           <select
             onChange={(e) => { if (e.target.value) handleBatchAssign(e.target.value); }}
             defaultValue=""
-            className="bg-slate-700 border border-slate-600 rounded-lg text-xs text-slate-200 px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+            className="bg-slate-700 border border-slate-600 rounded-lg text-xs text-slate-200 px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-accent cursor-pointer"
           >
             <option value="" disabled>Mover al capítulo...</option>
             {chapters.map((ch) => (
@@ -207,11 +211,7 @@ const NodeRow: React.FC<NodeRowProps> = ({ node, characters, tags, onClick, sele
         <div className={`w-4 h-4 mt-1 rounded border-2 shrink-0 flex items-center justify-center transition-colors ${
           selected ? 'bg-blue-500 border-blue-400' : 'border-slate-600'
         }`}>
-          {selected && (
-            <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-            </svg>
-          )}
+          {selected && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
         </div>
       )}
       <span className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${
@@ -231,7 +231,7 @@ const NodeRow: React.FC<NodeRowProps> = ({ node, characters, tags, onClick, sele
           {(node.data.characterTags || []).map((chId: string) => {
             const ch = characters.find((c) => c.id === chId);
             return ch ? (
-              <span key={chId} className="text-[9px] text-blue-300 bg-blue-900/30 px-1.5 py-0.5 rounded border border-blue-500/20">
+              <span key={chId} className="text-[10px] text-blue-300 bg-blue-900/30 px-1.5 py-0.5 rounded border border-blue-500/20">
                 {ch.name}
               </span>
             ) : null;
@@ -239,14 +239,14 @@ const NodeRow: React.FC<NodeRowProps> = ({ node, characters, tags, onClick, sele
           {(node.data.categoryTags || []).map((tagId: string) => {
             const tag = tags.find((t) => t.tagId === tagId);
             return tag ? (
-              <span key={tagId} className="text-[9px] px-1.5 py-0.5 rounded border" style={{ color: tag.color, borderColor: `${tag.color}40`, backgroundColor: `${tag.color}20` }}>
+              <span key={tagId} className="text-[10px] px-1.5 py-0.5 rounded border" style={{ color: tag.color, borderColor: `${tag.color}40`, backgroundColor: `${tag.color}20` }}>
                 {tag.label}
               </span>
             ) : null;
           })}
         </div>
 
-        <p className="text-[9px] text-slate-600 font-mono mt-1">ID: {node.id.split('_').pop()}</p>
+        <p className="text-[10px] text-slate-600 font-mono mt-1">ID: {node.id.split('_').pop()}</p>
       </div>
     </div>
   );

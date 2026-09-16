@@ -39,7 +39,9 @@ plotDesigner/
 │   │   │   │   ├── CharacterNode.tsx     # Nodo personaje para grafo
 │   │   │   │   ├── RelationEditModal.tsx # Modal editar relación
 │   │   │   │   ├── AIPanel.tsx           # Asistente IA (4 funciones)
-│   │   │   │   └── ExportModal.tsx       # Exportación (5 formatos)
+│   │   │   │   ├── InkStudioView.tsx     # Editor Ink + preview jugable
+│   │   │   │   ├── inkCodeMirror.ts      # Sintaxis Ink para CodeMirror 6
+│   │   │   │   └── ExportModal.tsx       # Exportación (6 formatos)
 │   │   │   ├── Dashboard/            # Lista de proyectos
 │   │   │   ├── Sidebar/              # Paneles laterales
 │   │   │   │   ├── CharacterPanel.tsx    # CRUD personajes + campos expandidos
@@ -69,7 +71,9 @@ plotDesigner/
 │   │   │   ├── api.test.ts          # Tests de apiFetch (7 tests)
 │   │   │   ├── upload.ts            # Subida de imágenes
 │   │   │   ├── sanitizeHtml.ts
-│   │   │   └── sanitizeHtml.test.ts # Tests sanitizeRichTextHtml (13 tests)
+│   │   │   ├── sanitizeHtml.test.ts # Tests sanitizeRichTextHtml (13 tests)
+│   │   │   ├── ink.ts               # Lógica Ink: ensamblado, compilación, plantillas
+│   │   │   └── ../tests/ink.test.ts # Tests de lib/ink (14 tests)
 │   │   ├── components/ui/exportMarkdown.ts
 │   │   └── components/ui/exportMarkdown.test.ts # Tests htmlToMarkdown + generateProjectMarkdown (17 tests)
 │   │   ├── App.tsx                  # Router principal + providers
@@ -92,6 +96,7 @@ plotDesigner/
 │   │   │   ├── userController.ts        # Perfil + library/tags
 │   │   │   ├── uploadController.ts      # Subida de archivos
 │   │   │   ├── exportController.ts      # Export PDF/DOCX/EPUB/HTML/Fountain
+│   │   │   ├── export/htmlPlayable.ts   # Export HTML jugable (Ink + inkjs)
 │   │   │   └── aiController.ts          # IA (sugerencias, nombres, huecos, resumen)
 │   │   ├── models/
 │   │   │   ├── Project.ts               # Schema proyecto
@@ -269,6 +274,7 @@ interface ISnapshot {
 | GET | `/api/export/:projectId/docx` | DOCX (docx lib) |
 | GET | `/api/export/:projectId/epub` | EPUB (epub-gen) |
 | GET | `/api/export/:projectId/fountain` | Fountain (texto) |
+| GET | `/api/export/:projectId/html-playable` | HTML jugable (Ink Studio autocontenido) |
 
 ### 4.7 AI (`/api/ai`)
 
@@ -323,7 +329,7 @@ OPENAI_MODEL=nombre-del-modelo
 
 ## 6. Vistas del Canvas
 
-El workspace tiene 5 vistas alternas, mutuamente excluyentes, activables desde la toolbar:
+El workspace tiene 6 vistas alternas, mutuamente excluyentes, activables desde la toolbar:
 
 | Botón | Vista | Componente | Descripción |
 |-------|-------|-----------|-------------|
@@ -332,6 +338,25 @@ El workspace tiene 5 vistas alternas, mutuamente excluyentes, activables desde l
 | 📄 | Manuscrito | `ManuscriptEditor.tsx` | Editor TipTap por capítulo + export TXT/HTML |
 | 👥 | Grafo personajes | `CharacterGraphView.tsx` | React Flow con relaciones entre personajes |
 | ✨ | Asistente IA | `AIPanel.tsx` | 4 herramientas de IA conversacional |
+| 🖋 | Ink Studio | `InkStudioView.tsx` | Editor Ink (narrativa ramificada) + preview jugable |
+
+---
+
+## 6.5 Ink Studio (narrativa interactiva)
+
+Editor de scripts [Ink](https://www.inklestudios.com/ink/) (lenguaje de Inkle para narrativa ramificada) integrado en el canvas:
+
+- **Contenido por nodo**: cada nodo del canvas puede tener su propio script en `data.inkContent`.
+- **Modo historia completa**: ensambla automáticamente todos los nodos con script en un solo relato (`assembleInkStory`, orden por capítulos y posición), generando un knot por nodo.
+- **Modo nodo**: compila y reproduce solo el script del nodo seleccionado.
+- **Editor CodeMirror 6**: resaltado de sintaxis Ink (`client/src/components/Canvas/inkCodeMirror.ts`), guardado con debounce de 900ms (mismo flujo de autosave/undo que el resto del proyecto).
+- **Reproductor editorial**: preview jugable con inkjs (choices, diverts, tags); texto serif, historial de elecciones, botones Reiniciar/Atrás (replay de la ruta), inspector de variables `{ }` y atajos `Ctrl+Enter` / `Esc` / teclas `1-9`.
+- **Diagnósticos**: errores de compilación con salto directo al nodo responsable (mapeo línea → nodo vía `fragmentForLine`).
+- **Accesos**: botón "Ink" en la toolbar del canvas, en el modal de nodo y badge "Ink" en tarjetas con script.
+
+Lógica pura reutilizable en `client/src/lib/ink.ts`; compilación vía `Compiler` de `inkjs/full`.
+
+> 📖 Guía de uso completa (sintaxis Ink, ensamblado, exportación): [`docs/ink-studio.md`](docs/ink-studio.md)
 
 ---
 
@@ -389,13 +414,15 @@ El workspace tiene 5 vistas alternas, mutuamente excluyentes, activables desde l
 | DOCX | docx | Word con títulos, párrafos justificados |
 | EPUB | epub-gen | Libro electrónico con índice, capítulos en XHTML |
 | Fountain | Texto plano | Formato de guion cinematográfico |
+| HTML Jugable | inkjs (UMD inline) | Historia interactiva Ink autocontenida: motor + story JSON + player vanilla; 422 si el script tiene errores |
 
 ### Flujo
 1. Backend busca el proyecto por `projectId` + `authorId`
 2. Compila `chapterManager.chapters[].manuscriptContent` (html)
 3. Para PDF/DOCX: extrae texto plano (strip HTML)
 4. Para EPUB: preserva HTML
-5. Stream o buffer → response con headers `Content-Disposition: attachment`
+5. Para HTML Jugable: ensambla los scripts Ink de los nodos (`assembleProjectInk`), compila con `Compiler` de `inkjs/full` y embebe story JSON + engine UMD en un solo HTML
+6. Stream o buffer → response con headers `Content-Disposition: attachment`
 
 ---
 
@@ -412,6 +439,7 @@ El workspace tiene 5 vistas alternas, mutuamente excluyentes, activables desde l
 | `sanitizeHtml.test.ts` | 13 | `sanitizeRichTextHtml()` — tags permitidos/prohibidos, escaping, caché |
 | `exportMarkdown.test.ts` | 17 | `htmlToMarkdown()` + `generateProjectMarkdown()` — conversión HTML→MD, agrupación capítulos |
 | `api.test.ts` | 7 | `apiFetch()` — headers, token, 401 redirect, custom init |
+| `tests/ink.test.ts` | 14 | `lib/ink.ts` — ensamblado de historia, compilación, mapeo errores→nodo, plantillas |
 
 ### Cómo correrlos
 ```bash

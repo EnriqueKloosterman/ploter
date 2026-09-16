@@ -2,6 +2,9 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ReactFlow, useNodesState, useEdgesState, MarkerType, Background, BackgroundVariant } from '@xyflow/react';
 import type { Node, Edge } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
+import { useTranslation } from 'react-i18next';
+import { Users } from 'lucide-react';
+import EmptyState from '../ui/EmptyState';
 import { useProject } from '../../context/useProject';
 import type { ICharacterRelation } from '../../context/projectTypes';
 import CharacterNode from './CharacterNode';
@@ -26,6 +29,7 @@ const RELATION_LABELS: Record<string, string> = {
 };
 
 const CharacterGraphView: React.FC = () => {
+  const { t } = useTranslation();
   const { project, addRelation, updateRelation, removeRelation } = useProject();
   const { characters, characterRelations } = project;
   const [editingRelation, setEditingRelation] = useState<ICharacterRelation | null>(null);
@@ -111,7 +115,7 @@ const CharacterGraphView: React.FC = () => {
     <div className="h-full w-full bg-slate-900 relative">
       {characters.length === 0 ? (
         <div className="flex h-full items-center justify-center">
-          <p className="text-slate-500 italic">No hay personajes. Crealos desde el panel lateral.</p>
+          <EmptyState icon={Users} message={t('characters.noCharacters')} />
         </div>
       ) : (
         <>
@@ -133,13 +137,13 @@ const CharacterGraphView: React.FC = () => {
             <button
               onClick={handleNewRelation}
               disabled={characters.length < 2}
-              className="px-3 py-1.5 text-xs bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium"
+              className="px-3 py-1.5 text-xs bg-accent hover:bg-accent-strong disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium"
             >
               + Relacion
             </button>
             <div className="flex flex-wrap gap-1 items-center bg-slate-800/80 border border-slate-700/50 rounded-lg px-3 py-1.5">
               {Object.entries(RELATION_COLORS).map(([type, color]) => (
-                <span key={type} className="text-[9px] px-1.5 py-0.5 rounded-full font-medium" style={{ backgroundColor: `${color}30`, color }}>
+                <span key={type} className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ backgroundColor: `${color}30`, color }}>
                   {RELATION_LABELS[type]}
                 </span>
               ))}

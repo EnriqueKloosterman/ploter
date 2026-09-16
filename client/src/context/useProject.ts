@@ -1,5 +1,5 @@
 import React, { createContext, useContext } from 'react';
-import type { IBeat, ICharacter, ICharacterRelation, IChapter, IEdge, INode, IProject } from './projectTypes';
+import type { IBeat, ICanvasBackground, ICharacter, ICharacterRelation, IChapter, IEdge, INode, IProject } from './projectTypes';
 
 export interface ProjectDataContextType {
   project: IProject;
@@ -10,6 +10,7 @@ export interface ProjectDataContextType {
   setActiveFilterCharId: React.Dispatch<React.SetStateAction<string | null>>;
   updateNodes: (nodes: INode[]) => void;
   updateEdges: (edges: IEdge[]) => void;
+  updateCanvasBackground: (background: ICanvasBackground) => void;
   addCharacter: (char: ICharacter) => void;
   addChapter: (chap: IChapter) => void;
   updateCharacter: (charId: string, updates: Partial<ICharacter>) => void;

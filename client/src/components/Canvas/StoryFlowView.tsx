@@ -1,5 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { GitBranch } from 'lucide-react';
+import EmptyState from '../ui/EmptyState';
 import { useProject } from '../../context/useProject';
 import { useUser } from '../../context/UserContext';
 import type { INode, ICharacter } from '../../context/projectTypes';
@@ -28,7 +30,7 @@ const StoryFlowView: React.FC = () => {
   if (nodes.length === 0) {
     return (
       <div className="h-full w-full bg-slate-900 overflow-y-auto p-6 flex items-center justify-center">
-        <p className="text-sm text-slate-500 italic">{t('storyFlow.noNodes')}</p>
+        <EmptyState icon={GitBranch} message={t('storyFlow.noNodes')} />
       </div>
     );
   }
@@ -63,7 +65,7 @@ const StoryFlowView: React.FC = () => {
         {unassigned.length > 0 && (
           <section>
             <div className="sticky top-0 bg-slate-900/90 backdrop-blur-sm pb-2 mb-4 z-10">
-              <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Sin capítulo</h2>
+              <h2 className="label text-slate-400">Sin capítulo</h2>
             </div>
             <div className="space-y-4">
               {unassigned.map((node) => (

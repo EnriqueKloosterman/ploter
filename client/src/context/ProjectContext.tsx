@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { apiFetch } from '../lib/api';
+import Spinner from '../components/ui/Spinner';
 import { ProjectDataContext, ProjectStatusContext } from './useProject';
-import type { IBeat, ICharacter, ICharacterRelation, IChapter, IEdge, INode, IProject } from './projectTypes';
+import type { IBeat, ICanvasBackground, ICharacter, ICharacterRelation, IChapter, IEdge, INode, IProject } from './projectTypes';
 
 const AUTOSAVE_DELAY_MS = 5000;
 const MAX_UNDO = 50;
@@ -201,6 +202,14 @@ export const ProjectProvider: React.FC<{ children: ReactNode; projectId: string 
     setProject((prev) => prev ? ({
       ...prev,
       canvas: { ...prev.canvas, edges }
+    }) : prev);
+  }, [pushUndo]);
+
+  const updateCanvasBackground = useCallback((background: ICanvasBackground) => {
+    pushUndo();
+    setProject((prev) => prev ? ({
+      ...prev,
+      canvas: { ...prev.canvas, background }
     }) : prev);
   }, [pushUndo]);
 
@@ -405,8 +414,8 @@ export const ProjectProvider: React.FC<{ children: ReactNode; projectId: string 
 
   if (isLoading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-slate-900 text-slate-300">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mb-4"></div>
+      <div className="flex h-screen w-full items-center justify-center bg-surface text-slate-300">
+        <Spinner size="lg" />
         <p className="ml-4 font-semibold text-lg tracking-wide">Cargando proyecto...</p>
       </div>
     );
@@ -434,6 +443,7 @@ export const ProjectProvider: React.FC<{ children: ReactNode; projectId: string 
         setActiveFilterCharId,
         updateNodes,
         updateEdges,
+        updateCanvasBackground,
         addCharacter,
         addChapter,
         updateCharacter,

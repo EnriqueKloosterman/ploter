@@ -27,8 +27,8 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f172a] flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-slate-800/50 border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
+    <div className="min-h-screen bg-surface flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-slate-800/50 border border-white/10 rounded-xl p-8 shadow-2xl">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-cyan-500 mb-2">
             PlotWeaver
@@ -76,7 +76,7 @@ const Login: React.FC = () => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all hover:-translate-y-0.5"
+            className="w-full py-3 bg-accent hover:bg-accent-strong disabled:bg-accent-deep disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-lg shadow-accent/20 transition-all hover:-translate-y-0.5"
           >
             {isSubmitting ? 'Entrando...' : 'Entrar'}
           </button>

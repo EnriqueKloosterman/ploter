@@ -30,9 +30,9 @@ const ProjectStats: React.FC = () => {
   }, [project]);
 
   return (
-    <div className="bg-slate-900 border border-slate-700/50 rounded-xl overflow-hidden shadow-lg mb-6">
+    <div className="bg-slate-900 border border-white/10 rounded-xl overflow-hidden shadow-lg mb-6">
       <div className="px-4 py-3 border-b border-slate-700/50 bg-slate-800/80">
-        <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest">{t('stats.title')}</h3>
+        <h3 className="label text-slate-400">{t('stats.title')}</h3>
       </div>
       <div className="p-3 space-y-2">
         {stats.map(({ label, value, color }) => (

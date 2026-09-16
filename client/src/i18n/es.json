@@ -252,10 +252,51 @@
     "chapters": "Capítulos",
     "noChapters": "Sin capítulos aún"
   },
+  "outline": {
+    "empty": "El proyecto está vacío. Crea nodos y capítulos desde el panel lateral."
+  },
+  "canvasBg": {
+    "title": "Fondo del lienzo",
+    "pattern": "Patrón",
+    "pattern_dots": "Puntos",
+    "pattern_lines": "Líneas",
+    "pattern_cross": "Cruces",
+    "image": "Imagen de fondo",
+    "urlPlaceholder": "Pega la URL de una imagen...",
+    "apply": "Usar",
+    "upload": "Subir imagen",
+    "uploading": "Subiendo...",
+    "uploadError": "Error al subir la imagen",
+    "opacity": "Opacidad",
+    "remove": "Quitar"
+  },
   "storyFlow": {
     "title": "Story Flow",
     "noNodes": "No hay tarjetas aún. Crea algunas en el canvas.",
     "chapter": "Capítulo"
+  },
+  "inkStudio": {
+    "withScript": "con script",
+    "unassigned": "Sin capítulo",
+    "noNodes": "No hay tarjetas aún. Crea algunas en el canvas.",
+    "selectNode": "Selecciona una tarjeta",
+    "insertTemplate": "Insertar plantilla",
+    "playFull": "Historia completa",
+    "playNode": "Solo esta tarjeta",
+    "test": "Probar",
+    "restart": "Reiniciar",
+    "emptySource": "No hay contenido Ink que compilar.",
+    "noErrors": "Compila correctamente",
+    "jumpToNode": "Ir a la tarjeta",
+    "player": "Reproductor",
+    "playerEmpty": "Escribe script Ink y pulsa Probar para jugar la historia.",
+    "end": "Fin",
+    "back": "Atrás",
+    "varsTitle": "Variables",
+    "noVars": "Sin variables declaradas",
+    "choiceKey": "Elección",
+    "saving": "Guardando...",
+    "saved": "Guardado"
   },
   "aiPanel": {
     "title": "Asistente IA",
